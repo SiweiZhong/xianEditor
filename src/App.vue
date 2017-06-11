@@ -65,13 +65,14 @@ function renderContent (h, i){
 function whereAmI(arr, loc){
   let x=0,y=0;
   for(let i=0;i<arr.length;i++){
-    if(arr[i] > loc){
+    if(arr[i] >= loc){
       break;
     }
     y++;
     x = arr[i];
   }
-  x = loc - x;
+  x = loc - x - 1;
+  
   return {x, y};
 }
 
@@ -101,7 +102,7 @@ export default {
           text += w.value;
         }
       }
-      console.log(text)
+
       return getFontWidth(text)-1;
     },
     y (){
@@ -111,7 +112,7 @@ export default {
           break;
         }
       }
-      console.log(i)
+
       return i * 16;
     }
   },
@@ -147,7 +148,7 @@ export default {
           while(1){
             if(state.location == 0) break;
             const word = words[state.location-1]
-            if(word == 'type' || word == 'closed'){
+            if(word == 'style' || word == 'closed'){
               store.dispatch(setLocation(state.location-1));
             }else{
               break;
@@ -169,14 +170,12 @@ export default {
           let a = rowsIndex[y-2] || 0;
           let b = rowsIndex[y-1] - a;
 
-          // console.log(a, b, x)
-
-          if(x > b){ x = b}
-          let loc = a + x;
-          console.log(words[loc])
-          // if(words[loc].type == 'enter'){
-          //   loc = (loc-1) || 0;
-          // }
+          //本行长度比上一行长时，定位到上行结尾, b是个数x是下标
+          if(x > b-1){
+            x = b; //a==0是边界情况
+            if(a > 0) x--; 
+          }
+          const loc = a == 0 ? x : a + x + 1;
           
           store.dispatch(setLocation(loc));
           break;
