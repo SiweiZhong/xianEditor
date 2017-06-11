@@ -1,14 +1,4 @@
-import * as constants from './constants'
+import input from './inputAction'
+import state from './stateAction'
 
-
-function addKey(key){
-    return {type: ADD_KEY, key}
-}
-
-
-
-
-
-
-
-export {}
+export default Object.assign({}, input, state);

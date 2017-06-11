@@ -1,204 +1,241 @@
-<template>
-<div>
-  <textarea id="edit" class="editor" @keydown.stop="keydown">
-  </textarea>
-  <div class="editor">
-    
-    <div 
-      class="row" :class="{'editing': index == y}" 
-      :style="{'--offsetLeft': location+'px'}" 
-      v-if="line && key != 'length'" 
-      v-for="(line, key, index) in words"
-    >
-      <template v-for="word in line.values"><template v-if="word.value=='&nbsp;'" v-html="'&nbsp;'"></template><template v-else>{{word.value}}</template>
-      </template>
-    </div>
-  </div>
-</div>
-
-</template>
-
 <script>
 import Vue from 'vue'
-let arr = [
-  'int', 'float', 'function'
-]
+
+import store from './reducers'
+import actions from './actions'
+const {addKey, setLocation, backspace} = actions
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
 ctx.font = '16px Microsoft YaHei';
+
 function getFontWidth(text){
   return ctx.measureText(text).width;
 }
+function setData(self, state){
+  self.state = state.editorState;
+  self.words = state.words;
+}
 
-function word(w){
+function text(s){
   return {
-    width: getFontWidth(w),
-    height: 0,
-    value: w,
+    type: 'text',
+    value: s,
   }
 }
-function newLine(){
+function placeholder(s){
   return {
-    width: 0,
-    height: 0,
-    x: 0,
-    values: [],
+    type: 'placeholder',
+    value: s,
   }
+}
+function enter(s){
+  return {
+    type: 'enter',
+    value: s,
+  }
+}
+function style(s){
+  return {
+    type: 'style',
+    value: s,
+  }
+}
+function closed(){
+  return {
+    type: 'closed',
+  }
+}
+function renderContent (h, i){
+  let _children = [];
+  for(;i<this.words.length;i++){
+    let w = this.words[i];
+    if(w.type == 'style'){
+      let {children, index} = renderContent.call(this, h, i+1);
+      _children[_children.length] = (h(w.value,{}, children));
+      i = index;
+    }else if(w.type == 'closed'){
+      return {children:_children, index: i};
+    }else{
+      _children[_children.length] = w.value;
+    }
+  }
+  return _children;
+}
+function whereAmI(arr, loc){
+  let x=0,y=0;
+  for(let i=0;i<arr.length;i++){
+    if(arr[i] > loc){
+      break;
+    }
+    y++;
+    x = arr[i];
+  }
+  x = loc - x;
+  return {x, y};
 }
 
 export default {
   name: 'app',
-  filters: {
-    
-  },
   data () {
     return {
-      edit: 'true',
-      
-      y: 0,
-      ox: undefined,
-      oy: undefined,
-
-      words: {
-        '0': newLine(),
-        'length': 1,
-      },
-
-      inner: '',
-      naiveText: '',
-      processTest: '',
-      keystr: '',
-      index: 0,
-      lastLength: 0,
-      isProcess: false,
+      state: {},
+      words: [],
+      rowsIndex: [],
+      lineHeight: 16,
     }
   },
   computed: {
-    location (){
-      let line = this.words[this.y];
-      if(line == undefined){
-        return 0;
+    x (){
+      let last = 0;
+      for(let i=0;i<this.rowsIndex.length;i++){
+        const index = this.rowsIndex[i];
+        if(index >= this.state.location) break;
+        
+        last = index;
       }
-      let text = line.values.slice(0, line.x).reduce((a, b) => a + b.value, '');
-      
+      let text = ''
+      for(;last<this.state.location;last++){
+        const w = this.words[last];
+        if(w.type == 'text'){
+          text += w.value;
+        }
+      }
+      console.log(text)
       return getFontWidth(text)-1;
+    },
+    y (){
+      let i=0;
+      for(;i<this.rowsIndex.length;i++){
+        if(this.rowsIndex[i] >= this.state.location){
+          break;
+        }
+      }
+      console.log(i)
+      return i * 16;
     }
+  },
+  created (){
+    const unsubscribe = store.subscribe(()=>{
+      setData(this, store.getState())
+    })
+    store.dispatch(setLocation(0))
   },
   methods: {
     keydown (event){
       let {key, code, shiftKey, target} = event;
-      let {words, y} = this;
-      let line = words[y];
-      let {x} = line;
-      // console.log(key)
+      let {state, words, rowsIndex} = this
+      let {location} = state
+
       if(key != 'Process'){
-        if(shiftKey){
-          if(this.ox == undefined){
-            this.ox = x;
-            this.oy = y;
-          }
-        }
-
         if(code.charAt(0) == 'K' || code.charAt(0) == 'D'){
-          if(!words[y]) {
-            Vue.set(words, y, newLine());
-            words.length++;
-          }
-          words[y].values.splice(x, 0, word(key));
-          line.x++;
-        }else if(key == 'Enter'){
-          if(y == 0){
-            Vue.set(words, y+1, newLine());
-            this.y++;
-            words.length++;
-          }else{
-            let len = words.length;
-            if(y != len-1){
-              for(let i=0;i<len-y;i++){
-                Vue.set(words, len-i, words[len-i-1]);
-              }
-            }
-            
-            Vue.set(words, y+1, newLine());
-            
-            this.y++;
-            words.length++;
-          }
-        }else if(key == ' '){
-          if(this.processTest.length === 0){
-            Vue.set(words[y].values, x, word('&nbsp;'));
-            line.x++;
-          }
-        }else if(key == 'ArrowUp'){
-          if(y > 0) this.y--;
-        }else if(key == 'ArrowDown'){
-          if(y < words.length-1) this.y++;
-        }else if(key == 'ArrowLeft'){
-          if(x > 0) line.x--;
-        }else if(key == 'ArrowRight'){
-          if(x < line.values.length) line.x++;
-        }else if(key == 'Backspace'){
-          if(this.ox == undefined){
-            if(line.x > 0){
-              line.values.splice(x-1, 1);
-              line.x--;
-            }
-          }else{
-            let a = this.oy, b = y;
-            if(a > b){
-              a = y;
-              b = this.oy;
-            }
-            
-            for(let i=a;i<=b;i++){
-              let line = words[i];
-              if(i == a){
-                if(a == b){ // 同一行时
-                  line.values.splice(this.ox>x?x:this.ox, Math.abs(this.ox-x));
-                }else if(i == this.oy){ // 如果从上向下选择
-                  let arr = words[b].values.slice(x);
-                  line.values.splice(this.ox, line.values.length, ...arr);
-                  this.y = this.oy;
-                }else{
-                  let l = words[b];
-                  let arr = line.values.slice(this.ox);
-                  l.values.splice(l.x, l.values.length, ...arr);
-                }
-              }else {
-                words[i] = undefined;
-                words.length--;
-              }
-            }
-            let n = b-a;
-            if(n > 0){
-              for(let i=b+1;i<words.length;i++){
-                words[i-n] = words[i];
-                words[i] = undefined;
-              }
-            }
-          }
-
+          store.dispatch(addKey(text(key)));
+          store.dispatch(setLocation(location+1));
         }
-        target.value = '';
-        this.processTest = '';
-      }else{
-        setTimeout(()=>{
-          let l = this.processTest.length;
-          this.processTest = target.value;
+        switch(key){
+        case ' ':
+          store.dispatch(addKey(placeholder(' ')));
+          store.dispatch(setLocation(location+1));
+          break;
+        case 'Enter':
+          this.rowsIndex.push(location);
 
-          words[y].values.splice(x-l, l, ...[...target.value].map(s => word(s)));
-          line.x += target.value.length - l;
-        }, 100);
+          store.dispatch(addKey(enter(<br />)));
+          store.dispatch(setLocation(location+1));
+          break
+        case 'Backspace':
+          while(1){
+            if(state.location == 0) break;
+            const word = words[state.location-1]
+            if(word == 'type' || word == 'closed'){
+              store.dispatch(setLocation(state.location-1));
+            }else{
+              break;
+            }
+          }
+          
+          if(state.location > 0){
+            store.dispatch(setLocation(state.location-1));
+            store.dispatch(backspace(state.location));
+          }
+          
+          break;
+        case 'ArrowUp':
+          let {x, y} = whereAmI(rowsIndex, state.location);
+          if(y == 0){
+            break;
+          }
+          
+          let a = rowsIndex[y-2] || 0;
+          let b = rowsIndex[y-1] - a;
+
+          // console.log(a, b, x)
+
+          if(x > b){ x = b}
+          let loc = a + x;
+          console.log(words[loc])
+          // if(words[loc].type == 'enter'){
+          //   loc = (loc-1) || 0;
+          // }
+          
+          store.dispatch(setLocation(loc));
+          break;
+        case 'ArrowDown':
+
+
+          break;
+        case 'ArrowLeft':
+          while(1){
+            if(state.location == 0){
+              break;
+            }
+            const x = state.location-1
+            const word = words[x];
+            if(word.type=='style' || word.type=='closed' || word.type=='enter'){
+              store.dispatch(setLocation(x));
+            }else{
+              store.dispatch(setLocation(x));
+              break
+            }
+          }
+          break;
+        case 'ArrowRight':
+          while(1){
+            if(location == words.length){
+              break;
+            }
+            let word = words[state.location];
+            if(word.type=='style' || word.type=='closed' || word.type=='enter'){
+              store.dispatch(setLocation(state.location+1));
+            }else{
+              store.dispatch(setLocation(state.location+1));
+              break
+            }
+          }
+          break;
+        }
+
+      }else{
+
       }
-      if(!shiftKey){
-        this.ox = undefined;
-        this.oy = undefined;
-      }
-      
+
       event.preventDefault();
     },
-  }
+  },
+  render (h){
+    let _words = renderContent.call(this, h, 0);
+
+    return (
+      <div>
+        <div class="editor" style={{'line-height': this.lineHeight+'px','--x': this.x+'px', '--y': this.y+'px'}}>
+          {
+            _words
+          }
+        </div>
+        <input onKeydown={this.keydown} />
+      </div>
+    )
+  },
 }
 </script>
 
@@ -216,10 +253,11 @@ body{
   box-sizing: border-box;
   position: relative;
 }
-.editing::before{
+.editor::before{
   content: '|';
   position: absolute;
-  left: var(--offsetLeft);
+  top: var(--y);
+  left: var(--x);
   animation-duration: 1.2s;
   animation-iteration-count: infinite;
   animation-name: slidein;
