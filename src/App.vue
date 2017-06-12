@@ -3,7 +3,7 @@ import Vue from 'vue'
 
 import store from './reducers'
 import actions from './actions'
-const {addKey, setLocation, backspace} = actions
+const {addKey, setLocation, setRowsIndex, removeRowsIndex, backspace} = actions
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -71,7 +71,7 @@ function whereAmI(arr, loc){
     y++;
     x = arr[i];
   }
-  x = loc - x - 1;
+  x = x == 0 ? loc : loc - x - 1;
   
   return {x, y};
 }
@@ -82,15 +82,16 @@ export default {
     return {
       state: {},
       words: [],
-      rowsIndex: [],
       lineHeight: 16,
     }
   },
   computed: {
     x (){
       let last = 0;
-      for(let i=0;i<this.rowsIndex.length;i++){
-        const index = this.rowsIndex[i];
+      const {rowsIndex} = this.state;
+
+      for(let i=0;i<rowsIndex.length;i++){
+        const index = rowsIndex[i];
         if(index >= this.state.location) break;
         
         last = index;
@@ -107,12 +108,14 @@ export default {
     },
     y (){
       let i=0;
-      for(;i<this.rowsIndex.length;i++){
-        if(this.rowsIndex[i] >= this.state.location){
+      const {rowsIndex, location} = this.state;
+
+      for(;i<rowsIndex.length;i++){
+        if(rowsIndex[i] >= location){
           break;
         }
       }
-
+      // console.log(rowsIndex.length, location, i)
       return i * 16;
     }
   },
@@ -125,8 +128,8 @@ export default {
   methods: {
     keydown (event){
       let {key, code, shiftKey, target} = event;
-      let {state, words, rowsIndex} = this
-      let {location} = state
+      let {state, words} = this
+      let {location, rowsIndex} = state
 
       if(key != 'Process'){
         if(code.charAt(0) == 'K' || code.charAt(0) == 'D'){
@@ -137,29 +140,35 @@ export default {
         case ' ':
           store.dispatch(addKey(placeholder(' ')));
           store.dispatch(setLocation(location+1));
+
           break;
         case 'Enter':
-          this.rowsIndex.push(location);
-
+          store.dispatch(setRowsIndex(location));
           store.dispatch(addKey(enter(<br />)));
           store.dispatch(setLocation(location+1));
+
           break
         case 'Backspace':
           while(1){
-            if(state.location == 0) break;
-            const word = words[state.location-1]
+            const {location} = this.state;
+            if(location == 0) break;
+            const word = words[location-1]
             if(word == 'style' || word == 'closed'){
-              store.dispatch(setLocation(state.location-1));
+              store.dispatch(setLocation(location-1));
             }else{
               break;
             }
           }
-          
-          if(state.location > 0){
-            store.dispatch(setLocation(state.location-1));
-            store.dispatch(backspace(state.location));
+
+          if(words[this.state.location-1].type == 'enter'){
+            store.dispatch(removeRowsIndex(this.state.location-1));
           }
           
+          if(this.state.location > 0){
+            store.dispatch(setLocation(this.state.location-1));
+            store.dispatch(backspace(this.state.location));
+          }
+
           break;
         case 'ArrowUp':
           let {x, y} = whereAmI(rowsIndex, state.location);
@@ -176,21 +185,34 @@ export default {
             if(a > 0) x--; 
           }
           const loc = a == 0 ? x : a + x + 1;
-          
           store.dispatch(setLocation(loc));
+          
           break;
-        case 'ArrowDown':
+        case 'ArrowDown':{
+          let {x, y} = whereAmI(rowsIndex, state.location);
+          if(y == rowsIndex.length){
+            break;
+          }
+          let a = rowsIndex[y+1] || words.length; //相当于最后一位补了换行符
+          let b = a - rowsIndex[y];
 
-
+          if(x > b-1){
+            x = b-1
+          }
+          const loc = rowsIndex[y] + x + 1;
+          store.dispatch(setLocation(loc));
+          
           break;
+        }
         case 'ArrowLeft':
           while(1){
             if(state.location == 0){
               break;
             }
-            const x = state.location-1
+            const x = this.state.location-1
             const word = words[x];
-            if(word.type=='style' || word.type=='closed' || word.type=='enter'){
+
+            if(word.type=='style' || word.type=='closed'){
               store.dispatch(setLocation(x));
             }else{
               store.dispatch(setLocation(x));
@@ -203,11 +225,13 @@ export default {
             if(location == words.length){
               break;
             }
-            let word = words[state.location];
-            if(word.type=='style' || word.type=='closed' || word.type=='enter'){
-              store.dispatch(setLocation(state.location+1));
+            const x = this.state.location + 1
+            let word = words[x];
+
+            if(word.type=='style' || word.type=='closed'){
+              store.dispatch(setLocation(x));
             }else{
-              store.dispatch(setLocation(state.location+1));
+              store.dispatch(setLocation(x));
               break
             }
           }
@@ -217,7 +241,7 @@ export default {
       }else{
 
       }
-
+      
       event.preventDefault();
     },
   },

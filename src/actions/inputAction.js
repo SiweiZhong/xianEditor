@@ -7,7 +7,4 @@ export default {
   backspace(){
     return {type: constants.BACKSPACE}
   },
-  addRow(){
-    return {type: constants.ADD_ROW}
-  },
 }

@@ -16,4 +16,13 @@ export default {
   setLocation (location){
     return {type: constants.SET_LOCATION, value: location}
   },
+  setRowsIndex (location){
+    return {type: constants.SET_ROWS_INDEX, value: location}
+  },
+  removeRowsIndex (values){
+    if(!(values instanceof Array)){
+      values = [values]
+    }
+    return {type: constants.REMOVE_ROWS_INDEX, value: values}
+  },
 }
