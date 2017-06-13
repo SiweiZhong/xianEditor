@@ -16,6 +16,9 @@ export default {
   setLocation (location){
     return {type: constants.SET_LOCATION, value: location}
   },
+  setOrigin (location){
+    return {type: constants.SET_ORIGIN, value: location}
+  },
   setRowsIndex (location){
     return {type: constants.SET_ROWS_INDEX, value: location}
   },
@@ -25,4 +28,7 @@ export default {
     }
     return {type: constants.REMOVE_ROWS_INDEX, value: values}
   },
+  scaKey (shiftKey, ctrlKey, altKey){
+    return {type: constants.S_C_A_KEY, value: {shiftKey, ctrlKey, altKey}}
+  }
 }

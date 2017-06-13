@@ -3,7 +3,7 @@ import Vue from 'vue'
 
 import store from './reducers'
 import actions from './actions'
-const {addKey, setLocation, setRowsIndex, removeRowsIndex, backspace} = actions
+const {addKey, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} = actions
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -17,28 +17,28 @@ function setData(self, state){
   self.words = state.words;
 }
 
-function text(s){
+function text(value){
   return {
     type: 'text',
-    value: s,
+    value
   }
 }
-function placeholder(s){
+function placeholder(value){
   return {
     type: 'placeholder',
-    value: s,
+    value
   }
 }
-function enter(s){
+function enter(value){
   return {
     type: 'enter',
-    value: s,
+    value
   }
 }
-function style(s){
+function style(value){
   return {
     type: 'style',
-    value: s,
+    value,
   }
 }
 function closed(){
@@ -48,11 +48,11 @@ function closed(){
 }
 function renderContent (h, i){
   let _children = [];
-  for(;i<this.words.length;i++){
-    let w = this.words[i];
+  for(;i<this._words.length;i++){
+    let w = this._words[i];
     if(w.type == 'style'){
       let {children, index} = renderContent.call(this, h, i+1);
-      _children[_children.length] = (h(w.value,{}, children));
+      _children[_children.length] = (h(w.value.name ,{style:w.value.style}, children));
       i = index;
     }else if(w.type == 'closed'){
       return {children:_children, index: i};
@@ -82,10 +82,14 @@ export default {
     return {
       state: {},
       words: [],
-      lineHeight: 16,
+      fontPercentage: 0,
+      fontSize: 16,
     }
   },
   computed: {
+    lineHeight (){
+      return this.fontSize * this.fontPercentage;
+    },
     x (){
       let last = 0;
       const {rowsIndex} = this.state;
@@ -103,7 +107,6 @@ export default {
           text += w.value;
         }
       }
-
       return getFontWidth(text)-1;
     },
     y (){
@@ -115,8 +118,32 @@ export default {
           break;
         }
       }
-      // console.log(rowsIndex.length, location, i)
-      return i * 16;
+      return i * this.lineHeight;
+    },
+    _words (){
+      const {origin, location} = this.state
+      if(origin == location){
+        return this.words;
+      }
+      let a = origin, b = location;
+      if(a > b){
+        let c = b;
+        b = a;
+        a = c;
+      }
+      let arr = this.words.slice(a, b+1);
+      arr.unshift(style({name:'span', 
+        style: {
+          'line-height': this.lineHeight + 'px',
+          background: '#3390ff',
+        }
+      }))
+      arr.push(closed())
+
+      let words = this.words.slice();
+      words.splice(a, b+1, ...arr);
+
+      return words;
     }
   },
   created (){
@@ -124,118 +151,134 @@ export default {
       setData(this, store.getState())
     })
     store.dispatch(setLocation(0))
+    
+    // 获得文字渲染后的实际行高
+    const sp = document.createElement('span');
+    sp.style.fontSize = '1000px';
+    sp.style.visibility = 'hidden';
+    sp.style.position = 'absolute';
+    sp.style.top = '0px';
+    sp.style.left = '0px';
+    sp.innerHTML = 'Test';
+    document.body.appendChild(sp);
+    
+    this.fontPercentage = sp.offsetHeight / 1000;
+    console.log(this.fontPercentage)
   },
   methods: {
     keydown (event){
-      let {key, code, shiftKey, target} = event;
+      let {key, code, shiftKey, ctrlKey, altKey, target} = event;
       let {state, words} = this
       let {location, rowsIndex} = state
 
       if(key != 'Process'){
+        store.dispatch(scaKey(shiftKey, ctrlKey, altKey));        
+        
         if(code.charAt(0) == 'K' || code.charAt(0) == 'D'){
           store.dispatch(addKey(text(key)));
           store.dispatch(setLocation(location+1));
         }
+
         switch(key){
-        case ' ':
-          store.dispatch(addKey(placeholder(' ')));
-          store.dispatch(setLocation(location+1));
+          case 'ArrowUp': {
+            let {x, y} = whereAmI(rowsIndex, state.location);
+            if(y !== 0){
+              let a = rowsIndex[y-2] || 0;
+              let b = rowsIndex[y-1] - a;
 
-          break;
-        case 'Enter':
-          store.dispatch(setRowsIndex(location));
-          store.dispatch(addKey(enter(<br />)));
-          store.dispatch(setLocation(location+1));
-
-          break
-        case 'Backspace':
-          while(1){
-            const {location} = this.state;
-            if(location == 0) break;
-            const word = words[location-1]
-            if(word == 'style' || word == 'closed'){
-              store.dispatch(setLocation(location-1));
-            }else{
-              break;
+              //本行长度比上一行长时，定位到上行结尾, b是个数,x是下标
+              if(x > b-1){
+                x = b; //a==0是边界情况
+                if(a > 0) x--; 
+              }
+              const loc = a == 0 ? x : a + x + 1;
+              store.dispatch(setLocation(loc));
             }
-          }
-
-          if(words[this.state.location-1].type == 'enter'){
-            store.dispatch(removeRowsIndex(this.state.location-1));
-          }
-          
-          if(this.state.location > 0){
-            store.dispatch(setLocation(this.state.location-1));
-            store.dispatch(backspace(this.state.location));
-          }
-
-          break;
-        case 'ArrowUp':
-          let {x, y} = whereAmI(rowsIndex, state.location);
-          if(y == 0){
             break;
           }
-          
-          let a = rowsIndex[y-2] || 0;
-          let b = rowsIndex[y-1] - a;
+          case 'ArrowDown':{
+            let {x, y} = whereAmI(rowsIndex, state.location);
+            if(y !== rowsIndex.length){
+              let a = rowsIndex[y+1] || words.length; //相当于最后一位补了换行符
+              let b = a - rowsIndex[y];
 
-          //本行长度比上一行长时，定位到上行结尾, b是个数x是下标
-          if(x > b-1){
-            x = b; //a==0是边界情况
-            if(a > 0) x--; 
-          }
-          const loc = a == 0 ? x : a + x + 1;
-          store.dispatch(setLocation(loc));
-          
-          break;
-        case 'ArrowDown':{
-          let {x, y} = whereAmI(rowsIndex, state.location);
-          if(y == rowsIndex.length){
+              if(x > b-1){
+                x = b-1
+              }
+              const loc = rowsIndex[y] + x + 1;
+              store.dispatch(setLocation(loc));
+            }
             break;
           }
-          let a = rowsIndex[y+1] || words.length; //相当于最后一位补了换行符
-          let b = a - rowsIndex[y];
+          case 'ArrowLeft':
+            while(1){
+              if(this.state.location == 0){
+                break;
+              }
+              const x = this.state.location-1
+              const word = words[x];
 
-          if(x > b-1){
-            x = b-1
-          }
-          const loc = rowsIndex[y] + x + 1;
-          store.dispatch(setLocation(loc));
-          
-          break;
+              if(word.type=='style' || word.type=='closed'){
+                store.dispatch(setLocation(x));
+              }else{
+                store.dispatch(setLocation(x));
+                break
+              }
+            }
+            break;
+          case 'ArrowRight':
+            while(1){
+              if(this.state.location == words.length){
+                break;
+              }
+              const x = this.state.location + 1
+              let word = words[x];
+              if(word && (word.type=='style' || word.type=='closed')){
+                store.dispatch(setLocation(x));
+              }else{
+                store.dispatch(setLocation(x));
+                break
+              }
+            }
+            break;
         }
-        case 'ArrowLeft':
-          while(1){
-            if(state.location == 0){
-              break;
-            }
-            const x = this.state.location-1
-            const word = words[x];
+        if(!shiftKey){
+          store.dispatch(setOrigin(this.state.location));
+        }
+        switch(key){
+          case ' ':
+            store.dispatch(addKey(placeholder(' ')));
+            store.dispatch(setLocation(location+1));
 
-            if(word.type=='style' || word.type=='closed'){
-              store.dispatch(setLocation(x));
-            }else{
-              store.dispatch(setLocation(x));
-              break
-            }
-          }
-          break;
-        case 'ArrowRight':
-          while(1){
-            if(location == words.length){
-              break;
-            }
-            const x = this.state.location + 1
-            let word = words[x];
+            break;
+          case 'Enter':
+            store.dispatch(setRowsIndex(location));
+            store.dispatch(addKey(enter(<br />)));
+            store.dispatch(setLocation(location+1));
 
-            if(word.type=='style' || word.type=='closed'){
-              store.dispatch(setLocation(x));
-            }else{
-              store.dispatch(setLocation(x));
-              break
+            break
+          case 'Backspace':
+            while(1){
+              const {location} = this.state;
+              if(location == 0) break;
+              const word = words[location-1]
+              if(word == 'style' || word == 'closed'){
+                store.dispatch(setLocation(location-1));
+              }else{
+                break;
+              }
             }
-          }
-          break;
+
+            if(words[this.state.location-1].type == 'enter'){
+              store.dispatch(removeRowsIndex(this.state.location-1));
+            }
+            
+            if(this.state.location > 0){
+              store.dispatch(setLocation(this.state.location-1));
+              store.dispatch(backspace(this.state.location));
+            }
+
+            break;
         }
 
       }else{
@@ -246,16 +289,17 @@ export default {
     },
   },
   render (h){
-    let _words = renderContent.call(this, h, 0);
-
+    const data = renderContent.call(this, h, 0);
+    console.log(data)
     return (
       <div>
         <div class="editor" style={{'line-height': this.lineHeight+'px','--x': this.x+'px', '--y': this.y+'px'}}>
           {
-            _words
+            data
           }
         </div>
         <input onKeydown={this.keydown} />
+        <span>qweasd</span>
       </div>
     )
   },
