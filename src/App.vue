@@ -3,7 +3,7 @@ import Vue from 'vue'
 
 import store from './reducers'
 import actions from './actions'
-const {addKey, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} = actions
+const {addKey, addB, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} = actions
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -23,22 +23,31 @@ function text(value){
     value
   }
 }
-function placeholder(value){
+function placeholder(className){
   return {
     type: 'placeholder',
-    value
+    value: {
+      name: 'span',
+      attr: {
+        class: className,
+      }
+    }
   }
 }
 function enter(value){
   return {
     type: 'enter',
-    value
+    value:{
+      name: 'br',
+    }
   }
 }
-function style(value){
+function style(name, attr){
   return {
     type: 'style',
-    value,
+    value: {
+      name, attr
+    },
   }
 }
 function closed(){
@@ -51,11 +60,16 @@ function renderContent (h, i){
   for(;i<this._words.length;i++){
     let w = this._words[i];
     if(w.type == 'style'){
-      let {children, index} = renderContent.call(this, h, i+1);
-      _children[_children.length] = (h(w.value.name ,{style:w.value.style}, children));
+      const {children, index} = renderContent.call(this, h, i+1);
+      const attr = Object.assign({}, w.value.attr)
+
+      _children[_children.length] = h(w.value.name , attr, children);
       i = index;
     }else if(w.type == 'closed'){
       return {children:_children, index: i};
+    }else if(w.type == 'placeholder' || w.type == 'enter'){
+      const attr = Object.assign({}, w.value.attr)
+      _children[_children.length] = h(w.value.name , attr)
     }else{
       _children[_children.length] = w.value;
     }
@@ -80,15 +94,16 @@ export default {
   name: 'app',
   data () {
     return {
+      data: [],
       state: {},
       words: [],
-      fontPercentage: 0,
+      hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
     }
   },
   computed: {
     lineHeight (){
-      return this.fontSize * this.fontPercentage;
+      return this.fontSize * this.hheadAscent;
     },
     x (){
       let last = 0;
@@ -131,18 +146,20 @@ export default {
         b = a;
         a = c;
       }
-      let arr = this.words.slice(a, b+1);
-      arr.unshift(style({name:'span', 
-        style: {
-          'line-height': this.lineHeight + 'px',
-          background: '#3390ff',
+      let arr = this.words.slice(a, b);
+      arr.unshift(style('span', 
+        {
+          style: {
+            'line-height': this.lineHeight + 'px',
+            background: '#3390ff',
+          }
         }
-      }))
+      ))
       arr.push(closed())
-
+      // console.log(arr)
       let words = this.words.slice();
-      words.splice(a, b+1, ...arr);
-
+      words.splice(a, b-a, ...arr);
+      console.log(words.map(w => w.value));
       return words;
     }
   },
@@ -162,10 +179,17 @@ export default {
     sp.innerHTML = 'Test';
     document.body.appendChild(sp);
     
-    this.fontPercentage = sp.offsetHeight / 1000;
-    console.log(this.fontPercentage)
+    this.hheadAscent = sp.offsetHeight / 1000;
   },
   methods: {
+    match (location, types){
+      if(typeof types == 'string'){
+        types = [types]
+      }
+    },
+    read (offset){
+      return this.words[this.state.location + offset];
+    },
     keydown (event){
       let {key, code, shiftKey, ctrlKey, altKey, target} = event;
       let {state, words} = this
@@ -176,6 +200,11 @@ export default {
         
         if(code.charAt(0) == 'K' || code.charAt(0) == 'D'){
           store.dispatch(addKey(text(key)));
+          store.dispatch(setLocation(location+1));
+        }
+
+        if(key == "'"){
+          store.dispatch(addB());
           store.dispatch(setLocation(location+1));
         }
 
@@ -242,45 +271,59 @@ export default {
             }
             break;
         }
-        if(!shiftKey){
-          store.dispatch(setOrigin(this.state.location));
-        }
+        
         switch(key){
           case ' ':
-            store.dispatch(addKey(placeholder(' ')));
+            store.dispatch(addKey(placeholder('space')));
             store.dispatch(setLocation(location+1));
 
             break;
           case 'Enter':
             store.dispatch(setRowsIndex(location));
-            store.dispatch(addKey(enter(<br />)));
+            store.dispatch(addKey(enter('br')));
             store.dispatch(setLocation(location+1));
 
             break
           case 'Backspace':
             while(1){
-              const {location} = this.state;
+              let {location} = this.state;
               if(location == 0) break;
-              const word = words[location-1]
-              if(word == 'style' || word == 'closed'){
+              let word = this.words[location-1]
+              
+              if(word.type != 'style' && word.type != 'closed'){
+                if(word.type == 'enter'){
+                  store.dispatch(removeRowsIndex(location-1));
+                }
                 store.dispatch(setLocation(location-1));
+                store.dispatch(backspace());
+                
+                
+                word = this.words[this.state.location-1];
+                if(!word){
+                  break;
+                }
+                if(word.type != 'style' && word.type != 'closed'){
+                  break;
+                }
+                if(this.words[this.state.location] == 'closed'){ //遇到空的样式结点就删除
+                  if(this.words[this.state.location-1] == 'style'){
+                    store.dispatch(setLocation(this.state.location-1));
+                    store.dispatch(backspace());
+                    store.dispatch(setLocation(this.state.location-1));
+                    store.dispatch(backspace());
+                  }
+                }else if(word.type == 'style'){
+                  break;
+                }
               }else{
-                break;
+                store.dispatch(setLocation(this.state.location-1));
               }
             }
-
-            if(words[this.state.location-1].type == 'enter'){
-              store.dispatch(removeRowsIndex(this.state.location-1));
-            }
-            
-            if(this.state.location > 0){
-              store.dispatch(setLocation(this.state.location-1));
-              store.dispatch(backspace(this.state.location));
-            }
-
             break;
         }
-
+        if(!shiftKey){
+          store.dispatch(setOrigin(this.state.location));
+        }
       }else{
 
       }
@@ -290,7 +333,7 @@ export default {
   },
   render (h){
     const data = renderContent.call(this, h, 0);
-    console.log(data)
+
     return (
       <div>
         <div class="editor" style={{'line-height': this.lineHeight+'px','--x': this.x+'px', '--y': this.y+'px'}}>
@@ -299,7 +342,6 @@ export default {
           }
         </div>
         <input onKeydown={this.keydown} />
-        <span>qweasd</span>
       </div>
     )
   },

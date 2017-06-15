@@ -7,4 +7,7 @@ export default {
   backspace(){
     return {type: constants.BACKSPACE}
   },
+  addB(){
+    return {type: constants.ADD_B}
+  }
 }
