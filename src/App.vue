@@ -1,60 +1,18 @@
 <script>
 import Vue from 'vue'
-
 import store from './reducers'
-import actions from './actions'
-const {addKey, addB, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} = actions
 
-let canvas = document.createElement('canvas');
-let ctx = canvas.getContext('2d');
-ctx.font = '16px Microsoft YaHei';
+import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
+import {addKey, addB, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} from './actions'
 
-function getFontWidth(text){
-  return ctx.measureText(text).width;
-}
-function setData(self, state){
-  self.state = state.editorState;
-  self.words = state.words;
-}
+import {
+  addSpace, addEnter, 
+  moveUp, moveDown, moveLeft, moveRight,
+  delBackspace,
+} from './controllers'
 
-function text(value){
-  return {
-    type: 'text',
-    value
-  }
-}
-function placeholder(className){
-  return {
-    type: 'placeholder',
-    value: {
-      name: 'span',
-      attr: {
-        class: className,
-      }
-    }
-  }
-}
-function enter(value){
-  return {
-    type: 'enter',
-    value:{
-      name: 'br',
-    }
-  }
-}
-function style(name, attr){
-  return {
-    type: 'style',
-    value: {
-      name, attr
-    },
-  }
-}
-function closed(){
-  return {
-    type: 'closed',
-  }
-}
+const {text, placeholder, enter, style, closed} = nodeTypes;
+
 function renderContent (h, i){
   let _children = [];
   for(;i<this._words.length;i++){
@@ -76,22 +34,10 @@ function renderContent (h, i){
   }
   return _children;
 }
-function whereAmI(arr, loc){
-  let x=0,y=0;
-  for(let i=0;i<arr.length;i++){
-    if(arr[i] >= loc){
-      break;
-    }
-    y++;
-    x = arr[i];
-  }
-  x = x == 0 ? loc : loc - x - 1;
-  
-  return {x, y};
-}
 
 export default {
   name: 'app',
+  props: ['width', 'height'],
   data () {
     return {
       data: [],
@@ -99,8 +45,10 @@ export default {
       words: [],
       hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
+      head: 0,
     }
   },
+  
   computed: {
     lineHeight (){
       return this.fontSize * this.hheadAscent;
@@ -135,6 +83,20 @@ export default {
       }
       return i * this.lineHeight;
     },
+    offsetY (){
+      const a = Math.floor(this.height / this.lineHeight);
+      const b = Math.round(this.y / this.lineHeight);
+      const m = b - this.head;
+
+      if(m >= a){
+        this.head += m - a + 1;
+        return -this.head * this.lineHeight; 
+      }else if(m < 0){
+        this.head += m;
+        return -this.head * this.lineHeight;
+      }
+      return -this.head * this.lineHeight;
+    },
     _words (){
       const {origin, location} = this.state
       if(origin == location){
@@ -156,10 +118,9 @@ export default {
         }
       ))
       arr.push(closed())
-      // console.log(arr)
       let words = this.words.slice();
       words.splice(a, b-a, ...arr);
-      console.log(words.map(w => w.value));
+
       return words;
     }
   },
@@ -176,19 +137,20 @@ export default {
     sp.style.position = 'absolute';
     sp.style.top = '0px';
     sp.style.left = '0px';
-    sp.innerHTML = 'Test';
+    sp.innerHTML = 'a';
     document.body.appendChild(sp);
     
     this.hheadAscent = sp.offsetHeight / 1000;
   },
   methods: {
-    match (location, types){
-      if(typeof types == 'string'){
-        types = [types]
+    clickB(){
+      if(this.state.location == this.state.origin){
+        return;
       }
-    },
-    read (offset){
-      return this.words[this.state.location + offset];
+      store.dispatch(addB());
+      
+      store.dispatch(setLocation(this.state.location+1));
+      store.dispatch(setOrigin(this.state.origin + 1));
     },
     keydown (event){
       let {key, code, shiftKey, ctrlKey, altKey, target} = event;
@@ -198,129 +160,72 @@ export default {
       if(key != 'Process'){
         store.dispatch(scaKey(shiftKey, ctrlKey, altKey));        
         
-        if(code.charAt(0) == 'K' || code.charAt(0) == 'D'){
+        if(code.slice(0, 3) == 'Key' || code.slice(0, 3) == 'Dig'){ // 主键盘字母&数字
           store.dispatch(addKey(text(key)));
           store.dispatch(setLocation(location+1));
         }
 
-        if(key == "'"){
-          store.dispatch(addB());
-          store.dispatch(setLocation(location+1));
+        switch(code){
+          case 'Backquote':     // `
+          case 'Minus':         // -
+          case 'Equal':         // +
+          
+          case 'BracketLeft':   // [
+          case 'BracketRight':  // ]
+          
+          case 'Backslash':     // \
+          case 'Semicolon':     // ;
+          case 'Quote':         // '
+
+          case 'Comma':         // ,
+          case 'Period':        // .
+          case 'Slash':         // /
+
+          case 'Numpad0':
+          case 'Numpad1':
+          case 'Numpad2':
+          case 'Numpad3':
+          case 'Numpad4':
+          case 'Numpad5':
+          case 'Numpad6':
+          case 'Numpad7':
+          case 'Numpad8':
+          case 'Numpad9':
+          
+          case 'NumpadDecimal':   // .
+          case 'NumpadAdd':       // +
+          case 'NumpadSubtract':  // -
+          case 'NumpadMultiply':  // *
+          case 'NumpadDivide':    // /
+            store.dispatch(addKey(text(key)));
+            store.dispatch(setLocation(location+1));
         }
 
-        switch(key){
-          case 'ArrowUp': {
-            let {x, y} = whereAmI(rowsIndex, state.location);
-            if(y !== 0){
-              let a = rowsIndex[y-2] || 0;
-              let b = rowsIndex[y-1] - a;
-
-              //本行长度比上一行长时，定位到上行结尾, b是个数,x是下标
-              if(x > b-1){
-                x = b; //a==0是边界情况
-                if(a > 0) x--; 
-              }
-              const loc = a == 0 ? x : a + x + 1;
-              store.dispatch(setLocation(loc));
-            }
+        switch(code){
+          case 'ArrowUp': 
+            moveUp();
             break;
-          }
-          case 'ArrowDown':{
-            let {x, y} = whereAmI(rowsIndex, state.location);
-            if(y !== rowsIndex.length){
-              let a = rowsIndex[y+1] || words.length; //相当于最后一位补了换行符
-              let b = a - rowsIndex[y];
-
-              if(x > b-1){
-                x = b-1
-              }
-              const loc = rowsIndex[y] + x + 1;
-              store.dispatch(setLocation(loc));
-            }
+          case 'ArrowDown':
+            moveDown();
             break;
-          }
           case 'ArrowLeft':
-            while(1){
-              if(this.state.location == 0){
-                break;
-              }
-              const x = this.state.location-1
-              const word = words[x];
-
-              if(word.type=='style' || word.type=='closed'){
-                store.dispatch(setLocation(x));
-              }else{
-                store.dispatch(setLocation(x));
-                break
-              }
-            }
+            moveLeft();
             break;
           case 'ArrowRight':
-            while(1){
-              if(this.state.location == words.length){
-                break;
-              }
-              const x = this.state.location + 1
-              let word = words[x];
-              if(word && (word.type=='style' || word.type=='closed')){
-                store.dispatch(setLocation(x));
-              }else{
-                store.dispatch(setLocation(x));
-                break
-              }
-            }
+            moveRight();
             break;
-        }
-        
-        switch(key){
-          case ' ':
-            store.dispatch(addKey(placeholder('space')));
-            store.dispatch(setLocation(location+1));
-
+          case 'Space':
+            addSpace();
             break;
-          case 'Enter':
-            store.dispatch(setRowsIndex(location));
-            store.dispatch(addKey(enter('br')));
-            store.dispatch(setLocation(location+1));
-
-            break
           case 'Backspace':
-            while(1){
-              let {location} = this.state;
-              if(location == 0) break;
-              let word = this.words[location-1]
-              
-              if(word.type != 'style' && word.type != 'closed'){
-                if(word.type == 'enter'){
-                  store.dispatch(removeRowsIndex(location-1));
-                }
-                store.dispatch(setLocation(location-1));
-                store.dispatch(backspace());
-                
-                
-                word = this.words[this.state.location-1];
-                if(!word){
-                  break;
-                }
-                if(word.type != 'style' && word.type != 'closed'){
-                  break;
-                }
-                if(this.words[this.state.location] == 'closed'){ //遇到空的样式结点就删除
-                  if(this.words[this.state.location-1] == 'style'){
-                    store.dispatch(setLocation(this.state.location-1));
-                    store.dispatch(backspace());
-                    store.dispatch(setLocation(this.state.location-1));
-                    store.dispatch(backspace());
-                  }
-                }else if(word.type == 'style'){
-                  break;
-                }
-              }else{
-                store.dispatch(setLocation(this.state.location-1));
-              }
-            }
+            delBackspace();
             break;
+          case 'NumpadEnter': //Enter
+          case 'Enter': //Enter
+            addEnter();
+            break
         }
+
         if(!shiftKey){
           store.dispatch(setOrigin(this.state.location));
         }
@@ -336,11 +241,27 @@ export default {
 
     return (
       <div>
-        <div class="editor" style={{'line-height': this.lineHeight+'px','--x': this.x+'px', '--y': this.y+'px'}}>
-          {
-            data
-          }
+        <div>
+          <span class="icon" onClick={this.clickB}>B</span>
+          <span class="icon">I</span>
+          <span class="icon">U</span>
+          <span class="icon">link</span>
+          <div style={{display: this.link || 'none'}}></div>
         </div>
+        <div class="wrap" style={{'width': this.width+'px', 'height': this.height+'px'}}>
+          <div class="editor" 
+            style={{
+              'line-height': this.lineHeight+'px',
+              '--x': this.x+'px', 
+              '--y': this.y+'px',
+              'top': this.offsetY + 'px',
+            }}>
+            {
+              data
+            }
+          </div>
+        </div>
+          
         <input onKeydown={this.keydown} />
       </div>
     )
@@ -349,17 +270,21 @@ export default {
 </script>
 
 <style>
+*{
+  box-sizing: border-box;
+}
 body{
   font-family: 'Microsoft YaHei';
   font-size: 16px;
 }
-.editor{
-  width: 500px;
-  height: 200px;
+.wrap{
   border: 1px solid;
   float: left;
   margin: 10px;
-  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+.editor{
   position: relative;
 }
 .editor::before{
@@ -371,17 +296,22 @@ body{
   animation-iteration-count: infinite;
   animation-name: slidein;
 }
-.row{
-  height: 1.2em;
-  line-height: 1.2em;
-  width: 100%;
-  display: inline-block;
+
+.icons{
   background: #eee;
 }
-p{
-  margin: 1px;
-  background: #f1f1f1;
+.icon{
+  line-height: 1.6em;
+  min-width: 1.42em;
+  display: inline-block;
+  box-sizing: border-box;
+
+  margin-right: 4px;
+  border: 1px solid #bababa;
+  padding: 0 0.4em;
+  
 }
+
 @keyframes slidein {
   0%{
     opacity: 1;

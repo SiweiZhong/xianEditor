@@ -1,4 +1,4 @@
-import constants from '../constants'
+import * as constants from '../constants'
 
 export function words(state=[], action, editorState){
   const {location, origin} = editorState;
@@ -14,18 +14,18 @@ export function words(state=[], action, editorState){
   }
   case constants.ADD_B: {
     let a = origin, b = location;
+    if(a == b) return state;
+
     if(a > b){
       let c = b;
       b = a;
       a = c;
     }
-    if(a == b) return state;
-
     state = [...state];
-    
+    console.log(state.map(v => v.value))
     state.splice(a, 0, {type:'style', value:{name:'b'}});
-    state.splice(b+2, 0, {type:'closed'});
-
+    state.splice(b+1, 0, {type:'closed'});
+    console.log(state.map(v => v.value))
     return state;
   }
   default:
