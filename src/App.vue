@@ -46,46 +46,62 @@ export default {
       hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
       head: 0,
+      autoBreak: true,
+      input: undefined,
+      isFocused: false,
     }
   },
-  
   computed: {
     lineHeight (){
       return this.fontSize * this.hheadAscent;
     },
     x (){
-      let last = 0;
-      const {rowsIndex} = this.state;
+      let {location} = this.state;
 
-      for(let i=0;i<rowsIndex.length;i++){
-        const index = rowsIndex[i];
-        if(index >= this.state.location) break;
-        
-        last = index;
-      }
-      let text = ''
-      for(;last<this.state.location;last++){
-        const w = this.words[last];
-        if(w.type == 'text'){
-          text += w.value;
+      const y = this.y;
+      let width = 0;
+      while(1){
+        if(location == 0){
+          break;
         }
-      }
-      return getFontWidth(text)-1;
-    },
-    y (){
-      let i=0;
-      const {rowsIndex, location} = this.state;
-
-      for(;i<rowsIndex.length;i++){
-        if(rowsIndex[i] >= location){
+        let word = this.words[--location];
+        if(word.rowNum == y){
+          if(!word.width) continue;
+          width = word.width;
           break;
         }
       }
-      return i * this.lineHeight;
+      return width - 1;
+    },
+    y (){
+      const {words} = this;
+      let {location} = this.state;
+
+      let i = 0;
+      while(1){
+        if(location == 0 && !words[location]) {
+          return 0;
+        };
+        let word = words[location--];
+        if(word){
+          if(word.rowNum >= 0){
+            if(word.type=='enter' && i > 0){ //光标左边是换行时y+1
+              i += word.rowNum;
+            }else{
+              i = word.rowNum;
+            }
+            break;
+          }
+          continue;
+        }else{ // location是最后一位
+          i = 1;
+        }
+      }
+      return i;
     },
     offsetY (){
       const a = Math.floor(this.height / this.lineHeight);
-      const b = Math.round(this.y / this.lineHeight);
+      const b = this.y;
       const m = b - this.head;
 
       if(m >= a){
@@ -99,8 +115,32 @@ export default {
     },
     _words (){
       const {origin, location} = this.state
+      let words = this.words.slice();
+
+      let text = ''
+      let width = 0;
+      let rowNum = 0;
+      for(let i=0;i<words.length;i++){
+        let w = words[i];
+        if(w.type == 'text'){
+          if(this.autoBreak && getFontWidth(text + w.value) > this.width){
+            text = '';
+            rowNum++
+          }
+          text += w.value;
+          let width = getFontWidth(text);
+          
+          w.width  = width;
+          w.rowNum = rowNum;
+        }else if(w.type == 'enter'){
+          text = '';
+          w.width  = width;
+          w.rowNum = rowNum++;
+        }
+      }
+
       if(origin == location){
-        return this.words;
+        return words;
       }
       let a = origin, b = location;
       if(a > b){
@@ -118,29 +158,10 @@ export default {
         }
       ))
       arr.push(closed())
-      let words = this.words.slice();
       words.splice(a, b-a, ...arr);
 
       return words;
     }
-  },
-  created (){
-    const unsubscribe = store.subscribe(()=>{
-      setData(this, store.getState())
-    })
-    store.dispatch(setLocation(0))
-    
-    // 获得文字渲染后的实际行高
-    const sp = document.createElement('span');
-    sp.style.fontSize = '1000px';
-    sp.style.visibility = 'hidden';
-    sp.style.position = 'absolute';
-    sp.style.top = '0px';
-    sp.style.left = '0px';
-    sp.innerHTML = 'a';
-    document.body.appendChild(sp);
-    
-    this.hheadAscent = sp.offsetHeight / 1000;
   },
   methods: {
     clickB(){
@@ -235,34 +256,73 @@ export default {
       
       event.preventDefault();
     },
+    editorFocus (event){
+      this.$refs.back.focus();
+    },
   },
+
+
+  created (){
+    const unsubscribe = store.subscribe(()=>{
+      setData(this, store.getState())
+    })
+    store.dispatch(setLocation(0))
+    
+    // 获得文字渲染后的实际行高
+    
+  },
+
+  mounted (){
+    const sp = document.createElement('span');
+    sp.style.fontSize = '1000px';
+    sp.style.visibility = 'hidden';
+    sp.style.position = 'absolute';
+    sp.style.top = '0px';
+    sp.style.left = '0px';
+    sp.innerHTML = 'a';
+    document.body.appendChild(sp);
+    
+    this.hheadAscent = sp.offsetHeight / 1000;
+    
+  },
+  
   render (h){
     const data = renderContent.call(this, h, 0);
 
     return (
-      <div>
-        <div>
+      <div class="xianEditor" onClick={this.editorFocus}>
+        <div class="icons">
           <span class="icon" onClick={this.clickB}>B</span>
           <span class="icon">I</span>
           <span class="icon">U</span>
           <span class="icon">link</span>
           <div style={{display: this.link || 'none'}}></div>
         </div>
-        <div class="wrap" style={{'width': this.width+'px', 'height': this.height+'px'}}>
-          <div class="editor" 
+        <div class="wrap" style={{'width': this.width+'px', 'height': this.height+'px'}} >
+          <div
+            ref="back"
+            class="back" contenteditable="true"
+            onKeydown={this.keydown}
+            onFocus = {()=>this.isFocused = true}
+            onBlur = {()=>this.isFocused = false}
+          >
+          </div>
+          <div class={["editor", this.isFocused?'isFocused':'']}
             style={{
-              'line-height': this.lineHeight+'px',
-              '--x': this.x+'px', 
-              '--y': this.y+'px',
+              'line-height': this.lineHeight + 'px',
+              '--x': this.x + 'px', 
+              '--y': this.y * this.lineHeight + 'px',
               'top': this.offsetY + 'px',
+              'word-break': this.autoBreak ? 'break-all' : 'normal',
             }}>
+            {
+              data.length || this.isFocused ? "" : <span style={{color: '#ccc'}}>请输出内容...</span>
+            }
             {
               data
             }
           </div>
         </div>
-          
-        <input onKeydown={this.keydown} />
       </div>
     )
   },
@@ -274,20 +334,29 @@ export default {
   box-sizing: border-box;
 }
 body{
+  
+}
+.xianEditor{
   font-family: 'Microsoft YaHei';
   font-size: 16px;
+  
+  display: inline-block;
+  position: relative;
+
+  --border-color: #cfcfcf;
 }
 .wrap{
-  border: 1px solid;
-  float: left;
-  margin: 10px;
+  border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
 }
 .editor{
   position: relative;
+  min-height: 100%;
+  background: #fff;
+  pointer-events: none;
 }
-.editor::before{
+.isFocused::before{
   content: '|';
   position: absolute;
   top: var(--y);
@@ -296,9 +365,17 @@ body{
   animation-iteration-count: infinite;
   animation-name: slidein;
 }
-
+.back{
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
 .icons{
-  background: #eee;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 0px;
+  background: #f3f3f3;
 }
 .icon{
   line-height: 1.6em;
@@ -307,9 +384,8 @@ body{
   box-sizing: border-box;
 
   margin-right: 4px;
-  border: 1px solid #bababa;
+  /*border: 1px solid #bababa;*/
   padding: 0 0.4em;
-  
 }
 
 @keyframes slidein {

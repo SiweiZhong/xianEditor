@@ -7,7 +7,7 @@ new Vue({
   render: h => h(App, 
     {
       props: {
-        width: 400,
+        width: 600,
         height: 200,
       }
     }
