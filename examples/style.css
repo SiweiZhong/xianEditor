@@ -1,0 +1,13 @@
+body{
+    font-size: 14px;
+}
+p{
+    margin: 1px;
+}
+h2{
+    font-size: 16px;
+    color: #888;
+}
+.editorWrap{
+    margin: 4px;
+}
