@@ -1,5 +1,4 @@
 <script>
-import Vue from 'vue'
 import store from './reducers'
 
 import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
