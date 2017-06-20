@@ -6,8 +6,8 @@
   "private": true,
   "main": "rollup.config.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development rollup -c",
-    "build": "cross-env NODE_ENV=production rollup -c"
+    "dev": "cross-env NODE_ENV=development rollup -c -w",
+    "build": "cross-env NODE_ENV=production rollup -c -w"
   },
   "dependencies": {
     "redux": "^3.7.0"
@@ -26,6 +26,7 @@
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-replace": "^1.1.1",
-    "rollup-plugin-vue": "^2.4.0"
+    "rollup-plugin-vue": "^2.4.0",
+    "rollup-watch": "^4.0.0"
   }
 }
