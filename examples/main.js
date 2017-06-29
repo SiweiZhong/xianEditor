@@ -13,6 +13,7 @@ new Vue({
   },
   methods: {
     preview (){
+      console.log(123)
       this.showDialog = true;
     },
     hidingDialog (){

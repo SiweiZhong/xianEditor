@@ -13,9 +13,8 @@
       <h1 class="title">xianEditor</h1>
       <h2 class="subtitle">依赖于vue的文字编辑器</h2>
       <div class="editorWrap">
-        <v-xian-editor :width="width" :height="height"></v-xian-editor>
+        <v-xian-editor :width="width" :height="height" @submit-content="preview"></v-xian-editor>
       </div>
-      <button @click="preview">预览</button>
     </div>
     <div class="box right">
       <p><i>请使用Chrome浏览器</i></p>

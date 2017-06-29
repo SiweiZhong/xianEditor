@@ -4,14 +4,16 @@ function text (value){
     value
   }
 }
-function placeholder (className){
+function placeholder (content, className, style={}, attr={}){
   return {
     type: 'placeholder',
-    value: {
-      name: 'span',
-      attr: {
-        class: className,
-      }
+    name: 'span',
+    value: content,
+    attrs:{
+      attrs: Object.assign({
+        class: 'placeholder ' + className,
+      }, attr),
+      style,
     }
   }
 }
