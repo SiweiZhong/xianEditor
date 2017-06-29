@@ -2,12 +2,21 @@ const {App} = xianEditor;
 
 new Vue({
   el: '#app',
-  render: h => h(App, 
-    {
-      props: {
-        width: 600,
-        height: 200,
-      }
+  components: {
+    'v-xian-editor': App,
+  },
+  data: {
+    width: 500,
+    height: 200,
+    text: '测试文本',
+    showDialog: false,
+  },
+  methods: {
+    preview (){
+      this.showDialog = true;
+    },
+    hidingDialog (){
+      this.showDialog = false;
     }
-  )
+  },
 })

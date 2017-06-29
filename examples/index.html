@@ -1,27 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>my-project</title>
-    <link href="../dest/bundle.css" rel="stylesheet" type="text/css">
-    <link href="style.css" rel="stylesheet" type="text/css">
-  </head>
-  <body>
-    <h1>xianEditor</h1>
-    <h2>依赖于vue的文字编辑器插件</h2>
-    <p>
-      当前版本暂不支持输入法，后续版本会加入输入法、数学公式、代码块支持
-    </p>
-    <p>
-      支持键盘操作，支持shift + 方向键 选取文本，支持字体加粗，支持自动换行
-    </p>
-    <a href="https://github.com/pastry-2841/xianEditor">GIT地址</a>
-    <div class="editorWrap">
-        <div id="app"></div>
+<head>
+  <meta charset="utf-8">
+  <title>my-project</title>
+  <link href="../dest/bundle.css" rel="stylesheet" type="text/css">
+  <link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="app">
+  <main class="">
+    <div class="box left">
+      <h1 class="title">xianEditor</h1>
+      <h2 class="subtitle">依赖于vue的文字编辑器</h2>
+      <div class="editorWrap">
+        <v-xian-editor :width="width" :height="height"></v-xian-editor>
+      </div>
+      <button @click="preview">预览</button>
     </div>
+    <div class="box right">
+      <p><i>请使用Chrome浏览器</i></p>
+      <p>
+        当前版本暂不支持输入法，后续版本会加入输入法、数学公式、代码语法高亮
+      </p>
+      <h2>当前支持</h2>
+      <ul>
+        <li>选区：shift + 方向键</li>
+        <li>字体加粗: 选择文本后点击按钮B</li>
+        <li>自动换行</li>
+      </ul>
+      <a href="https://github.com/pastry-2841/xianEditor">GIT地址</a>
+    </div>
+  </main>
+  <div class="dialog" :style="{display: showDialog ? 'block' : 'none'}">
     
-    <script src="vue.min.js"></script>
-    <script src="../dest/bundle.js"></script>
-    <script src="main.js"></script>
-  </body>
+    <div class="dialog_box">
+      <div class="dialog_head"><span class="head_button" @click="hidingDialog">X</span></div>
+      <div class="dialog_content">{{text}}</div>
+    </div>
+  </div>
+</div>
+
+
+<script src="vue.min.js"></script>
+<script src="../dest/bundle.js"></script>
+<script src="main.js"></script>
+</body>
 </html>

@@ -1,13 +1,125 @@
 body{
+    height: 100vh;
     font-size: 14px;
+    margin: 0px;
+    overflow: hidden;
+
+    --gap: 12px;
+    --gap-minus: -12px;
+
+    --color-back: #fff;
+    --color-rect: #f3f5f7;
+}
+#app{
+    height: 100%;
 }
 p{
     margin: 1px;
 }
 h2{
-    font-size: 16px;
-    color: #888;
+    
 }
 .editorWrap{
-    margin: 4px;
+}
+
+main{
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+    background: var(--color-back);
+    background-image: 
+        linear-gradient(
+            45deg, 
+            var(--color-rect) 25%, transparent 0, 
+            transparent 75%, var(--color-rect) 0),
+        linear-gradient(
+            45deg, 
+            var(--color-rect) 25%, transparent 0, 
+            transparent 75%, var(--color-rect) 0);
+    
+    background-position: 0 0, 15px 15px;
+    background-size: 30px 30px;
+
+    overflow: auto;
+    
+}
+.box {
+    background: rgba(0, 0, 0, 0.1);
+    overflow: auto;
+    margin: var(--gap);
+}
+
+.left {
+    text-align: center;
+    padding: 20px;
+    margin-right: 0px;
+}
+.title{
+    margin: 0;
+}
+.subtitle{
+    font-size: 15px;
+    color: #888;
+    margin: 0.7em;
+}
+.right {
+    flex-grow: 1;
+    padding: 15px;
+    word-wrap: break-word;
+}
+i {
+    font-weight: bold;
+}
+
+.dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /*background: rgba(0, 0, 0, 0.6);*/
+    display: none;
+}
+
+.dialog_box {
+    width: 480px;
+    height: 540px;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    box-shadow: 1px 1px 16px #aaa;
+    border: 1px solid #9ad2f3;
+    overflow-y: auto;
+}
+.dialog_head {
+    text-align: right;
+    background: #f3f3f3;
+}
+.head_button {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.4em;
+}
+.dialog_content {
+    padding: 4px;
+}
+.blur {
+    filter: blur(2px);
+}
+
+
+@media (max-width: 1024px) {
+    main {
+        flex-wrap: wrap;
+    }
+    .left {
+        flex-grow: 1;
+        margin: var(--gap);
+        margin-bottom: 0px;
+    }
 }
