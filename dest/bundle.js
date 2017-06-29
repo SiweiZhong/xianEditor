@@ -4,16 +4,13 @@
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
-/** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
 
 /** Used as a reference to the global object. */
 var root = freeGlobal || freeSelf || Function('return this')();
 
-/** Built-in value references. */
 var Symbol$1 = root.Symbol;
 
-/** Used for built-in method references. */
 var objectProto$1 = Object.prototype;
 
 /** Used to check objects for own properties. */
@@ -77,7 +74,6 @@ function objectToString(value) {
   return nativeObjectToString$1.call(value);
 }
 
-/** `Object#toString` result references. */
 var nullTag = '[object Null]';
 var undefinedTag = '[object Undefined]';
 
@@ -114,7 +110,6 @@ function overArg(func, transform) {
   };
 }
 
-/** Built-in value references. */
 var getPrototype = overArg(Object.getPrototypeOf, Object);
 
 /**
@@ -145,7 +140,6 @@ function isObjectLike(value) {
   return value != null && typeof value == 'object';
 }
 
-/** `Object#toString` result references. */
 var objectTag = '[object Object]';
 
 /** Used for built-in method references. */
@@ -270,12 +264,6 @@ exports['default'] = result;
 
 var index = index$1;
 
-/**
- * These are private action types reserved by Redux.
- * For any unknown actions, you must return the current state.
- * If the current state is undefined, you must return the initial state.
- * Do not reference these action types directly in your code.
- */
 var ActionTypes = {
   INIT: '@@redux/INIT'
 
@@ -549,10 +537,6 @@ function warning(message) {
  * (...args) => f(g(h(...args))).
  */
 
-/*
-* This is a dummy function to check if the function name has been altered by minification.
-* If the function has been minified and NODE_ENV !== 'production', warn the user.
-*/
 function isCrushed() {}
 
 if ("development" !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
@@ -703,20 +687,48 @@ function app() {
 
 var store = createStore(app);
 
+var Preview = { render: function render() {
+    var _vm = this;var _h = _vm.$createElement;var _c = _vm._self._c || _h;return _c('div', { staticClass: "icons" }, [_c('span', { staticClass: "icon", on: { "click": _vm.clickingBold } }, [_vm._v("B")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingAutoLinefeed } }, [_vm._v("Linefeed")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingMath } }, [_vm._v("Math")])]);
+  }, staticRenderFns: [], _scopeId: 'data-v-7b124cdc',
+  data: function data() {
+    return {
+      autoLinefeed: false
+    };
+  },
+
+  methods: {
+    clickingBold: function clickingBold(event) {
+      this.$emit('clickingTools', 'bold');
+    },
+    clickingAutoLinefeed: function clickingAutoLinefeed(event) {
+      this.$emit('clickingTools', 'autoLinefeed', this.autoLinefeed);
+      this.autoLinefeed = !this.autoLinefeed;
+    },
+    clickingMath: function clickingMath(event) {
+      this.$emit('clickingTools', 'math');
+    }
+  }
+};
+
 function text$1(value) {
   return {
     type: 'text',
     value: value
   };
 }
-function placeholder$1(className) {
+function placeholder$1(content, className) {
+  var style = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var attr = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+
   return {
     type: 'placeholder',
-    value: {
-      name: 'span',
-      attr: {
-        class: className
-      }
+    name: 'span',
+    value: content,
+    attrs: {
+      attrs: Object.assign({
+        class: 'placeholder ' + className
+      }, attr),
+      style: style
     }
   };
 }
@@ -946,6 +958,7 @@ function delBackspace() {
 }
 
 var text = text$1;
+var placeholder = placeholder$1;
 var style = style$1;
 var closed = closed$1;
 
@@ -959,15 +972,15 @@ function renderContent(h, i) {
           children = _renderContent$call.children,
           index = _renderContent$call.index;
 
-      var attr = Object.assign({}, w.value.attr);
+      var attrs = Object.assign({}, w.attrs);
 
-      _children[_children.length] = h(w.value.name, attr, children);
+      _children[_children.length] = h(w.name, attrs, children);
       i = index;
     } else if (w.type == 'closed') {
       return { children: _children, index: i };
     } else if (w.type == 'placeholder' || w.type == 'enter') {
-      var _attr = Object.assign({}, w.value.attr);
-      _children[_children.length] = h(w.value.name, _attr);
+      var _attrs = Object.assign({}, w.attrs);
+      _children[_children.length] = h(w.name, _attrs, w.value);
     } else {
       _children[_children.length] = w.value;
     }
@@ -975,7 +988,7 @@ function renderContent(h, i) {
   return _children;
 }
 
-var App = {
+var App = { _scopeId: 'data-v-04c2046b',
   name: 'app',
   props: ['width', 'height'],
   data: function data() {
@@ -986,9 +999,10 @@ var App = {
       hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
       head: 0,
-      autoBreak: true,
+      autoLinefeed: true,
       input: undefined,
-      isFocused: false
+      isFocused: false,
+      isProcess: false
     };
   },
 
@@ -996,12 +1010,93 @@ var App = {
     lineHeight: function lineHeight() {
       return this.fontSize * this.hheadAscent;
     },
+    offsetY: function offsetY() {
+      var a = Math.floor(this.height / this.lineHeight);
+      var b = this.y;
+      var m = b - this.head;
+
+      if (m >= a) {
+        this.head += m - a + 1;
+        return -this.head * this.lineHeight;
+      } else if (m < 0) {
+        this.head += m;
+        return -this.head * this.lineHeight;
+      }
+      return -this.head * this.lineHeight;
+    },
+    _words: function _words() {
+      var _state = this.state,
+          origin = _state.origin,
+          location = _state.location;
+
+      var words = this.words.slice();
+
+      var text = '';
+      var offsetWidth = 0;
+      var width = 0;
+      var rowNum = 0;
+      for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        if (w.type == 'text') {
+          if (this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width) {
+            text = '';
+            offsetWidth = 0;
+            rowNum++;
+          }
+          text += w.value;
+          var _width = getFontWidth(text);
+
+          w.width = offsetWidth + _width;
+          w.rowNum = rowNum;
+        } else if (w.type == 'enter') {
+          text = '';
+          w.width = width;
+          w.rowNum = rowNum++;
+        } else if (w.type == 'placeholder') {
+          if (this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width) {
+            text = '';
+            offsetWidth = 0;
+            rowNum++;
+          }
+          var _width2 = getFontWidth(text);
+          offsetWidth += w.attrs.attrs.width;
+          w.width = offsetWidth + _width2;
+
+          w.rowNum = rowNum;
+        }
+      }
+      // console.log(words.map(o=>o.width))
+      if (origin == location) {
+        return words;
+      }
+      var a = origin,
+          b = location;
+      if (a > b) {
+        var c = b;
+        b = a;
+        a = c;
+      }
+      var arr = this.words.slice(a, b);
+      arr.unshift(style('span', {
+        style: {
+          'line-height': this.lineHeight + 'px',
+          background: '#3390ff'
+        }
+      }));
+      arr.push(closed());
+      words.splice.apply(words, [a, b - a].concat(toConsumableArray(arr)));
+
+      return words;
+    }
+  },
+  methods: {
     x: function x() {
+      //Vue2取消了computed cache ,使用方法调用计算x y的值
       var location = this.state.location;
 
-
-      var y = this.y;
+      var y = this.y();
       var width = 0;
+
       while (1) {
         if (location == 0) {
           break;
@@ -1018,7 +1113,6 @@ var App = {
     y: function y() {
       var words = this.words;
       var location = this.state.location;
-
 
       var i = 0;
       while (1) {
@@ -1044,81 +1138,26 @@ var App = {
       }
       return i;
     },
-    offsetY: function offsetY() {
-      var a = Math.floor(this.height / this.lineHeight);
-      var b = this.y;
-      var m = b - this.head;
-
-      if (m >= a) {
-        this.head += m - a + 1;
-        return -this.head * this.lineHeight;
-      } else if (m < 0) {
-        this.head += m;
-        return -this.head * this.lineHeight;
-      }
-      return -this.head * this.lineHeight;
-    },
-    _words: function _words() {
-      var _state = this.state,
-          origin = _state.origin,
-          location = _state.location;
-
-      var words = this.words.slice();
-
-      var text = '';
-      var width = 0;
-      var rowNum = 0;
-      for (var i = 0; i < words.length; i++) {
-        var w = words[i];
-        if (w.type == 'text') {
-          if (this.autoBreak && getFontWidth(text + w.value) > this.width) {
-            text = '';
-            rowNum++;
-          }
-          text += w.value;
-          var _width = getFontWidth(text);
-
-          w.width = _width;
-          w.rowNum = rowNum;
-        } else if (w.type == 'enter') {
-          text = '';
-          w.width = width;
-          w.rowNum = rowNum++;
+    clickingTools: function clickingTools(name) {
+      if (name == 'bold') {
+        if (this.state.location == this.state.origin) {
+          return;
         }
-      }
+        store.dispatch(addB());
 
-      if (origin == location) {
-        return words;
+        store.dispatch(setLocation(this.state.location + 1));
+        store.dispatch(setOrigin(this.state.origin + 1));
+      } else if (name == 'autoLinefeed') {
+        this.autoLinefeed = arguments.length <= 1 ? undefined : arguments[1];
+      } else if (name == 'math') {
+        var width = getFontWidth('M') * 1.4;
+        var node1 = placeholder('M', 'math_tag', { width: width + 'px' }, { width: width });
+        var node2 = placeholder('M', 'math_tag', { width: width + 'px' }, { width: width });
+        store.dispatch(addKey(node1));
+        store.dispatch(setLocation(this.state.location + 1));
+        store.dispatch(setOrigin(this.state.location));
+        store.dispatch(addKey(node2));
       }
-      var a = origin,
-          b = location;
-      if (a > b) {
-        var c = b;
-        b = a;
-        a = c;
-      }
-      var arr = this.words.slice(a, b);
-      arr.unshift(style('span', {
-        style: {
-          'line-height': this.lineHeight + 'px',
-          background: '#3390ff'
-        }
-      }));
-      arr.push(closed());
-      words.splice.apply(words, [a, b - a].concat(toConsumableArray(arr)));
-
-      return words;
-    }
-  },
-  methods: {
-    clickB: function clickB() {
-      if (this.state.location == this.state.origin) {
-        return;
-      }
-      store.dispatch(addB());
-
-      store.dispatch(setLocation(this.state.location + 1));
-      store.dispatch(setOrigin(this.state.origin + 1));
     },
     keydown: function keydown(event) {
       var key = event.key,
@@ -1132,8 +1171,8 @@ var App = {
       var location = state.location,
           rowsIndex = state.rowsIndex;
 
-
       if (key != 'Process') {
+        this.isProcess = false;
         store.dispatch(scaKey(shiftKey, ctrlKey, altKey));
 
         if (code.slice(0, 3) == 'Key' || code.slice(0, 3) == 'Dig') {
@@ -1208,24 +1247,48 @@ var App = {
         if (!shiftKey) {
           store.dispatch(setOrigin(this.state.location));
         }
-      } else {}
+        event.preventDefault();
+      } else {
+        this.isProcess = true;
+      }
 
-      event.preventDefault();
+      // event.preventDefault();
+    },
+    oninput: function oninput(event) {
+      var _this = this;
+
+      var _event$target = event.target,
+          selectionStart = _event$target.selectionStart,
+          selectionEnd = _event$target.selectionEnd;
+
+
+      if (this.isProcess && selectionStart == selectionEnd) {
+        var _text = [].concat(toConsumableArray(event.target.innerHTML));
+        window.el = event.target;
+
+        _text.forEach(function (s) {
+          store.dispatch(addKey(_text(s)));
+          store.dispatch(setLocation(_this.state.location + 1));
+        });
+        this.isProcess = false;
+        // event.target.innerHTML = '';
+      }
     },
     editorFocus: function editorFocus(event) {
       this.$refs.back.focus();
+    },
+    submit: function submit(event) {
+      this.$emit('submit-content');
     }
   },
 
   created: function created() {
-    var _this = this;
+    var _this2 = this;
 
     var unsubscribe = store.subscribe(function () {
-      setData(_this, store.getState());
+      setData(_this2, store.getState());
     });
     store.dispatch(setLocation(0));
-
-    // 获得文字渲染后的实际行高
   },
   mounted: function mounted() {
     var sp = document.createElement('span');
@@ -1240,10 +1303,9 @@ var App = {
     this.hheadAscent = sp.offsetHeight / 1000;
   },
   render: function render(h) {
-    var _this2 = this;
+    var _this3 = this;
 
     var data = renderContent.call(this, h, 0);
-
     return h(
       'div',
       { 'class': 'xianEditor', on: {
@@ -1251,48 +1313,30 @@ var App = {
         }
       },
       [h(
-        'div',
-        { 'class': 'icons' },
-        [h(
-          'span',
-          { 'class': 'icon', on: {
-              'click': this.clickB
-            }
-          },
-          ['B']
-        ), h(
-          'span',
-          { 'class': 'icon' },
-          ['I']
-        ), h(
-          'span',
-          { 'class': 'icon' },
-          ['U']
-        ), h(
-          'span',
-          { 'class': 'icon' },
-          ['link']
-        ), h(
-          'div',
-          { style: { display: this.link || 'none' } },
-          []
-        )]
+        Preview,
+        {
+          on: {
+            'clickingTools': this.clickingTools
+          }
+        },
+        []
       ), h(
         'div',
         { 'class': 'wrap', style: { 'width': this.width + 'px', 'height': this.height + 'px' } },
         [h(
-          'div',
+          'textarea',
           {
             ref: 'back',
             'class': 'back', attrs: { contenteditable: 'true'
             },
             on: {
               'keydown': this.keydown,
+              'input': this.oninput,
               'focus': function focus() {
-                return _this2.isFocused = true;
+                return _this3.isFocused = true;
               },
               'blur': function blur() {
-                return _this2.isFocused = false;
+                return _this3.isFocused = false;
               }
             }
           },
@@ -1302,10 +1346,10 @@ var App = {
           { 'class': ["editor", this.isFocused ? 'isFocused' : ''],
             style: {
               'line-height': this.lineHeight + 'px',
-              '--x': this.x + 'px',
-              '--y': this.y * this.lineHeight + 'px',
+              '--x': this.x() + 'px',
+              '--y': this.y() * this.lineHeight + 'px',
               'top': this.offsetY + 'px',
-              'word-break': this.autoBreak ? 'break-all' : 'normal'
+              'word-break': this.autoLinefeed ? 'break-all' : 'normal'
             } },
           [data.length || this.isFocused ? "" : h(
             'span',
@@ -1313,6 +1357,14 @@ var App = {
             ['\u8BF7\u8F93\u51FA\u5185\u5BB9...']
           ), data]
         )]
+      ), h(
+        'button',
+        {
+          on: {
+            'click': this.submit
+          }
+        },
+        ['\u9884\u89C8']
       )]
     );
   }
