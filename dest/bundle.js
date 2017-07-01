@@ -732,12 +732,10 @@ function placeholder$1(content, className) {
     }
   };
 }
-function enter$1(value) {
+function enter$1(name) {
   return {
     type: 'enter',
-    value: {
-      name: 'br'
-    }
+    name: name
   };
 }
 function style$1(name, attr) {
@@ -1065,7 +1063,9 @@ var App = { _scopeId: 'data-v-04c2046b',
           w.rowNum = rowNum;
         }
       }
-      // console.log(words.map(o=>o.width))
+      console.log(words.map(function (o) {
+        return o.value;
+      }));
       if (origin == location) {
         return words;
       }
@@ -1278,7 +1278,12 @@ var App = { _scopeId: 'data-v-04c2046b',
       this.$refs.back.focus();
     },
     submit: function submit(event) {
-      this.$emit('submit-content');
+      var text = this.words.map(function (w) {
+        if (w.type == "text") {
+          return w.value;
+        }
+      }).join('');
+      this.$emit('submit-content', text);
     }
   },
 
@@ -1354,7 +1359,7 @@ var App = { _scopeId: 'data-v-04c2046b',
           [data.length || this.isFocused ? "" : h(
             'span',
             { style: { color: '#ccc' } },
-            ['\u8BF7\u8F93\u51FA\u5185\u5BB9...']
+            ['\u8BF7\u8F93\u5165\u5185\u5BB9...']
           ), data]
         )]
       ), h(

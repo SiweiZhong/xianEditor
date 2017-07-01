@@ -17,12 +17,10 @@ function placeholder (content, className, style={}, attr={}){
     }
   }
 }
-function enter (value){
+function enter (name){
   return {
     type: 'enter',
-    value:{
-      name: 'br',
-    }
+    name,
   }
 }
 function style (name, attr){
