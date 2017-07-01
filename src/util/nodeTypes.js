@@ -4,7 +4,7 @@ function text (value){
     value
   }
 }
-function placeholder (content, className, style={}, attr={}){
+function placeholder (content, className, style={}, attrs={}){
   return {
     type: 'placeholder',
     name: 'span',
@@ -12,7 +12,7 @@ function placeholder (content, className, style={}, attr={}){
     attrs:{
       attrs: Object.assign({
         class: 'placeholder ' + className,
-      }, attr),
+      }, attrs),
       style,
     }
   }
@@ -23,12 +23,11 @@ function enter (name){
     name,
   }
 }
-function style (name, attr){
+function style (name, attrs={}){
   return {
     type: 'style',
-    value: {
-      name, attr
-    },
+    name,
+    attrs
   }
 }
 function closed(){

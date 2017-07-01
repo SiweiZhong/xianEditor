@@ -21,7 +21,7 @@ function renderContent (h, i){
     if(w.type == 'style'){
       const {children, index} = renderContent.call(this, h, i+1);
       const attrs = Object.assign({}, w.attrs);
-
+      console.log(w.name , attrs, children)
       _children[_children.length] = h(w.name , attrs, children);
       i = index;
     }else if(w.type == 'closed'){
@@ -30,9 +30,11 @@ function renderContent (h, i){
       const attrs = Object.assign({}, w.attrs);
       _children[_children.length] = h(w.name, attrs, w.value);
     }else{
+      // console.log(w.value)
       _children[_children.length] = w.value;
     }
   }
+  // console.log(_children)
   return _children;
 }
 
@@ -110,7 +112,7 @@ export default {
           w.rowNum = rowNum;
         }
       }
-      // console.log(words.map(o=>o.width))
+      // console.log(words.map(o=>o.value))
       if(origin == location){
         return words;
       }
@@ -305,10 +307,16 @@ export default {
       this.$refs.back.focus();
     },
     submit (event){
-      this.$emit('submit-content');
+      const text = this.words
+        .map(w => {
+          if(w.type == "text"){
+            return w.value
+          }
+        })
+        .join('');
+      this.$emit('submit-content', text);
     }
   },
-
 
   created (){
     const unsubscribe = store.subscribe(()=>{
@@ -333,6 +341,7 @@ export default {
   
   render (h){
     const data = renderContent.call(this, h, 0);
+    // console.log(data)
     return (
       <div class="xianEditor" onClick={this.editorFocus}>
         <Preview onClickingTools={this.clickingTools}></Preview>
@@ -355,7 +364,7 @@ export default {
               'word-break': this.autoLinefeed ? 'break-all' : 'normal',
             }}>
             {
-              data.length || this.isFocused ? "" : <span style={{color: '#ccc'}}>请输出内容...</span>
+              data.length || this.isFocused ? "" : <span style={{color: '#ccc'}}>请输入内容...</span>
             }
             {
               data

@@ -718,7 +718,7 @@ function text$1(value) {
 }
 function placeholder$1(content, className) {
   var style = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var attr = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  var attrs = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
 
   return {
     type: 'placeholder',
@@ -727,7 +727,7 @@ function placeholder$1(content, className) {
     attrs: {
       attrs: Object.assign({
         class: 'placeholder ' + className
-      }, attr),
+      }, attrs),
       style: style
     }
   };
@@ -738,12 +738,13 @@ function enter$1(name) {
     name: name
   };
 }
-function style$1(name, attr) {
+function style$1(name) {
+  var attrs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
   return {
     type: 'style',
-    value: {
-      name: name, attr: attr
-    }
+    name: name,
+    attrs: attrs
   };
 }
 function closed$1() {
@@ -971,7 +972,7 @@ function renderContent(h, i) {
           index = _renderContent$call.index;
 
       var attrs = Object.assign({}, w.attrs);
-
+      console.log(w.name, attrs, children);
       _children[_children.length] = h(w.name, attrs, children);
       i = index;
     } else if (w.type == 'closed') {
@@ -980,9 +981,11 @@ function renderContent(h, i) {
       var _attrs = Object.assign({}, w.attrs);
       _children[_children.length] = h(w.name, _attrs, w.value);
     } else {
+      // console.log(w.value)
       _children[_children.length] = w.value;
     }
   }
+  // console.log(_children)
   return _children;
 }
 
@@ -1063,9 +1066,7 @@ var App = { _scopeId: 'data-v-04c2046b',
           w.rowNum = rowNum;
         }
       }
-      console.log(words.map(function (o) {
-        return o.value;
-      }));
+      // console.log(words.map(o=>o.value))
       if (origin == location) {
         return words;
       }
@@ -1311,6 +1312,7 @@ var App = { _scopeId: 'data-v-04c2046b',
     var _this3 = this;
 
     var data = renderContent.call(this, h, 0);
+    // console.log(data)
     return h(
       'div',
       { 'class': 'xianEditor', on: {
