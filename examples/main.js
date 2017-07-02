@@ -12,8 +12,8 @@ new Vue({
     showDialog: false,
   },
   methods: {
-    preview (){
-      console.log(123)
+    preview (text){
+      console.log(text)
       this.showDialog = true;
     },
     hidingDialog (){

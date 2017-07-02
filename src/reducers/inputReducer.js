@@ -22,10 +22,8 @@ export function words(state=[], action, editorState){
       a = c;
     }
     state = [...state];
-    console.log(state.map(v => v.value))
-    state.splice(a, 0, {type:'style', value:{name:'b'}});
+    state.splice(a, 0, {type:'style', name:'b'});
     state.splice(b+1, 0, {type:'closed'});
-    console.log(state.map(v => v.value))
     return state;
   }
   default:
