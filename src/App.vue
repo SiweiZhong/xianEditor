@@ -4,37 +4,41 @@ import store from './reducers'
 import Preview from './Preview.vue'
 
 import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
-import {addKey, addB, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} from './actions'
+import {addKey, addB, backspace, setLocation, setOrigin, removeRowsIndex, scaKey} from './actions'
 
 import {
-  addSpace, addEnter, 
+  addWord, addEnter, 
   moveUp, moveDown, moveLeft, moveRight,
   delBackspace,
 } from './controllers'
 
-const {text, placeholder, enter, style, closed} = nodeTypes;
+const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
 function renderContent (h, i){
   let _children = [];
   for(;i<this._words.length;i++){
     let w = this._words[i];
-    if(w.type == 'style'){
-      const {children, index} = renderContent.call(this, h, i+1);
-      const attrs = Object.assign({}, w.attrs);
-      console.log(w.name , attrs, children)
-      _children[_children.length] = h(w.name , attrs, children);
-      i = index;
-    }else if(w.type == 'closed'){
-      return {children:_children, index: i};
-    }else if(w.type == 'placeholder' || w.type == 'enter'){
-      const attrs = Object.assign({}, w.attrs);
-      _children[_children.length] = h(w.name, attrs, w.value);
-    }else{
-      // console.log(w.value)
-      _children[_children.length] = w.value;
+    const len = _children.length;
+    if(w instanceof Style){
+      if(w.end){
+        const {children, index} = renderContent.call(this, h, i+1);
+        const attrs = Object.assign({}, w.attrs);
+
+        _children[len] = h(w.name , attrs, children);
+        i = index;
+      }else{
+        return {children:_children, index: i};
+      }
+    }else if(w instanceof Placeholder){
+      if(w instanceof MathTag){
+        const attrs = Object.assign({}, w.attrs, w.style)
+        _children[len] = h(w.name, attrs, w.value);
+      }else{
+        _children[len] = h(w.name, {domProps:{innerHTML:w.value}});
+      }
     }
   }
-  // console.log(_children)
+  console.log(_children)
   return _children;
 }
 
@@ -82,6 +86,7 @@ export default {
       let offsetWidth = 0;
       let width = 0;
       let rowNum = 0;
+      /*
       for(let i=0;i<words.length;i++){
         let w = words[i];
         if(w.type == 'text'){
@@ -113,6 +118,8 @@ export default {
         }
       }
       // console.log(words.map(o=>o.value))
+      */
+
       if(origin == location){
         return words;
       }
@@ -123,15 +130,13 @@ export default {
         a = c;
       }
       let arr = this.words.slice(a, b);
-      arr.unshift(style('span', 
-        {
-          style: {
-            'line-height': this.lineHeight + 'px',
-            background: '#3390ff',
-          }
-        }
-      ))
-      arr.push(closed())
+      const start = new Style({
+        'line-height': this.lineHeight + 'px',
+        background: '#3390ff',
+      });
+
+      arr.unshift(start)
+      arr.push(start.end())
       words.splice(a, b-a, ...arr);
       
       return words;
@@ -195,12 +200,10 @@ export default {
         this.autoLinefeed = arg[0];
       }else if(name == 'math'){
         let width = getFontWidth('M') * 1.4;
-        let node1 = placeholder('M', 'math_tag', {width:width+'px'}, {width});
-        let node2 = placeholder('M', 'math_tag', {width:width+'px'}, {width});
-        store.dispatch(addKey(node1));
-        store.dispatch(setLocation(this.state.location+1));
-        store.dispatch(setOrigin(this.state.location));
-        store.dispatch(addKey(node2));
+        const start = new Math({width}, {width:width+'px'}, 'M');
+        addPlaceholder(start);
+        addPlaceholder(start.end());
+        moveLeft();
       }
     },
     keydown (event){
@@ -209,11 +212,10 @@ export default {
       let {location, rowsIndex} = state
       if(key != 'Process'){
         this.isProcess = false;
-        store.dispatch(scaKey(shiftKey, ctrlKey, altKey));        
+        store.dispatch(scaKey(shiftKey, ctrlKey, altKey));
         
         if(code.slice(0, 3) == 'Key' || code.slice(0, 3) == 'Dig'){ // 主键盘字母&数字
-          store.dispatch(addKey(text(key)));
-          store.dispatch(setLocation(location+1));
+          addWord(key)
         }
 
         switch(code){
@@ -248,8 +250,7 @@ export default {
           case 'NumpadSubtract':  // -
           case 'NumpadMultiply':  // *
           case 'NumpadDivide':    // /
-            store.dispatch(addKey(text(key)));
-            store.dispatch(setLocation(location+1));
+            addWord(key)
         }
 
         switch(code){
@@ -277,9 +278,6 @@ export default {
             break
         }
 
-        if(!shiftKey){
-          store.dispatch(setOrigin(this.state.location));
-        }
         event.preventDefault();
       }else{
         this.isProcess = true;
@@ -295,8 +293,7 @@ export default {
         window.el = event.target
         
         text.forEach(s=>{
-          store.dispatch(addKey(text(s)));
-          store.dispatch(setLocation(this.state.location+1));
+          addWord(s);
         })
         this.isProcess = false;
         // event.target.innerHTML = '';
@@ -309,7 +306,7 @@ export default {
     submit (event){
       const text = this.words
         .map(w => {
-          if(w.type == "text"){
+          if(w.constructor.name == 'Text'){
             return w.value
           }
         })
@@ -335,13 +332,13 @@ export default {
     sp.innerHTML = 'a';
     document.body.appendChild(sp);
     
-    this.hheadAscent = sp.offsetHeight / 1000;
+    this.hheadAscent = sp.offsetHeight / 1000; // 获取真实行高比
     
   },
   
   render (h){
     const data = renderContent.call(this, h, 0);
-    // console.log(data)
+    console.log(data)
     return (
       <div class="xianEditor" onClick={this.editorFocus}>
         <Preview onClickingTools={this.clickingTools}></Preview>

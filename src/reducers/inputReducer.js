@@ -1,4 +1,5 @@
 import * as constants from '../constants'
+import {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} from '../util/nodeTypes'
 
 export function words(state=[], action, editorState){
   const {location, origin} = editorState;
@@ -7,11 +8,13 @@ export function words(state=[], action, editorState){
     state = [...state];
     state.splice(location, 0, action.value);
     return state
+
   case constants.BACKSPACE: {
     state = [...state];
     state.splice(location, 1);
     return state;
   }
+
   case constants.ADD_B: {
     let a = origin, b = location;
     if(a == b) return state;
@@ -22,26 +25,13 @@ export function words(state=[], action, editorState){
       a = c;
     }
     state = [...state];
-    console.log(state.map(v => v.value))
-    state.splice(a, 0, {type:'style', value:{name:'b'}});
-    state.splice(b+1, 0, {type:'closed'});
-    console.log(state.map(v => v.value))
+
+    const w = new Style;
+    state.splice(a, 0, w);
+    state.splice(b+1, 0, w.end());
     return state;
   }
-  default:
-    return state
-  }
-}
 
-export function rowsIndex(state=[], action, location){
-  switch(action.type){
-  case constants.ADD_ROW:
-    return [
-      ...state,
-      {
-        value: action.key
-      }
-    ]
   default:
     return state
   }

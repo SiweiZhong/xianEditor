@@ -557,201 +557,9 @@ var SET_ORIGIN = 'SET_ORIGIN';
 
 
 
-var SET_ROWS_INDEX = 'SET_ROWS_INDEX';
+
 var REMOVE_ROWS_INDEX = 'REMOVE_ROWS_INDEX';
-var S_C_A_KEY = 'S_C_A_KEY';
-
-var toConsumableArray = function (arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  } else {
-    return Array.from(arr);
-  }
-};
-
-function words() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-  var action = arguments[1];
-  var editorState = arguments[2];
-  var location = editorState.location,
-      origin = editorState.origin;
-
-  switch (action.type) {
-    case ADD_KEY:
-      state = [].concat(toConsumableArray(state));
-      state.splice(location, 0, action.value);
-      return state;
-    case BACKSPACE:
-      {
-        state = [].concat(toConsumableArray(state));
-        state.splice(location, 1);
-        return state;
-      }
-    case ADD_B:
-      {
-        var a = origin,
-            b = location;
-        if (a == b) return state;
-
-        if (a > b) {
-          var c = b;
-          b = a;
-          a = c;
-        }
-        state = [].concat(toConsumableArray(state));
-        console.log(state.map(function (v) {
-          return v.value;
-        }));
-        state.splice(a, 0, { type: 'style', value: { name: 'b' } });
-        state.splice(b + 1, 0, { type: 'closed' });
-        console.log(state.map(function (v) {
-          return v.value;
-        }));
-        return state;
-      }
-    default:
-      return state;
-  }
-}
-
-var initEditorState = {
-  location: 0,
-  origin: 0,
-  rowsIndex: [],
-  shiftKey: false,
-  ctrlKey: false,
-  altKey: false
-};
-function editorState() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initEditorState;
-  var action = arguments[1];
-
-  switch (action.type) {
-    case SET_LOCATION:
-      return Object.assign({}, state, {
-        location: action.value
-      });
-    case SET_ORIGIN:
-      return Object.assign({}, state, {
-        origin: action.value
-      });
-    case SET_ROWS_INDEX:
-      {
-        var rows = [].concat(toConsumableArray(state.rowsIndex));
-        rows.push(action.value);
-        return Object.assign({}, state, {
-          rowsIndex: rows.sort(function (a, b) {
-            return a - b;
-          })
-        });
-      }
-    case REMOVE_ROWS_INDEX:
-      {
-        var _rows = [].concat(toConsumableArray(state.rowsIndex));
-        action.value.forEach(function (v) {
-          return _rows.splice(_rows.indexOf(v), 1);
-        });
-        return Object.assign({}, state, {
-          rowsIndex: _rows
-        });
-      }
-    case S_C_A_KEY:
-      {
-        var _action$value = action.value,
-            shiftKey = _action$value.shiftKey,
-            ctrlKey = _action$value.ctrlKey,
-            altKey = _action$value.altKey;
-
-        return Object.assign({}, state, {
-          shiftKey: shiftKey, ctrlKey: ctrlKey, altKey: altKey
-        });
-      }
-    default:
-      return state;
-  }
-}
-
-function app() {
-  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var action = arguments[1];
-
-  var _editorState = editorState(state.editorState, action);
-
-  return {
-    editorState: _editorState,
-    words: words(state.words, action, _editorState)
-  };
-}
-
-var store = createStore(app);
-
-var Preview = { render: function render() {
-    var _vm = this;var _h = _vm.$createElement;var _c = _vm._self._c || _h;return _c('div', { staticClass: "icons" }, [_c('span', { staticClass: "icon", on: { "click": _vm.clickingBold } }, [_vm._v("B")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingAutoLinefeed } }, [_vm._v("Linefeed")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingMath } }, [_vm._v("Math")])]);
-  }, staticRenderFns: [], _scopeId: 'data-v-7b124cdc',
-  data: function data() {
-    return {
-      autoLinefeed: false
-    };
-  },
-
-  methods: {
-    clickingBold: function clickingBold(event) {
-      this.$emit('clickingTools', 'bold');
-    },
-    clickingAutoLinefeed: function clickingAutoLinefeed(event) {
-      this.$emit('clickingTools', 'autoLinefeed', this.autoLinefeed);
-      this.autoLinefeed = !this.autoLinefeed;
-    },
-    clickingMath: function clickingMath(event) {
-      this.$emit('clickingTools', 'math');
-    }
-  }
-};
-
-function text$1(value) {
-  return {
-    type: 'text',
-    value: value
-  };
-}
-function placeholder$1(content, className) {
-  var style = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var attrs = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-
-  return {
-    type: 'placeholder',
-    name: 'span',
-    value: content,
-    attrs: {
-      attrs: Object.assign({
-        class: 'placeholder ' + className
-      }, attrs),
-      style: style
-    }
-  };
-}
-function enter$1(name) {
-  return {
-    type: 'enter',
-    name: name
-  };
-}
-function style$1(name) {
-  var attrs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  return {
-    type: 'style',
-    name: name,
-    attrs: attrs
-  };
-}
-function closed$1() {
-  return {
-    type: 'closed'
-  };
-}
+var S_C_A_KEY = 'S_C_A_KEY'; //shift ctrl alt
 
 function whereAmI(arr, loc) {
   var x = 0,
@@ -795,6 +603,411 @@ function setData(self, state) {
   self.words = state.words;
 }
 
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+
+
+
+
+
+
+
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+
+
+
+
+
+
+
+
+
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
+var Identifier$1 = function () {
+  function Identifier() {
+    classCallCheck(this, Identifier);
+  }
+
+  createClass(Identifier, [{
+    key: 'end',
+    value: function end() {
+      var ident = new Identifier();
+      ident.header = this;
+      this.end = ident;
+      return ident;
+    }
+  }]);
+  return Identifier;
+}();
+
+var Style$1 = function (_Identifier) {
+  inherits(Style, _Identifier);
+
+  function Style() {
+    var style = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    classCallCheck(this, Style);
+
+    var _this = possibleConstructorReturn(this, (Style.__proto__ || Object.getPrototypeOf(Style)).call(this));
+
+    _this.name == 'span';
+    _this.style = style;
+    _this.init();
+    return _this;
+  }
+
+  createClass(Style, [{
+    key: 'init',
+    value: function init() {
+      this.width = this.style.width;
+    }
+  }, {
+    key: 'replace',
+    value: function replace(width) {
+      this.width = width;
+    }
+  }]);
+  return Style;
+}(Identifier$1);
+
+var Placeholder$1 = function (_Identifier2) {
+  inherits(Placeholder, _Identifier2);
+
+  function Placeholder(name) {
+    var attrs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var style = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var value = arguments[3];
+    classCallCheck(this, Placeholder);
+
+    var _this2 = possibleConstructorReturn(this, (Placeholder.__proto__ || Object.getPrototypeOf(Placeholder)).call(this));
+
+    _this2.name = name;
+    _this2.attrs = attrs;
+    _this2.style = style;
+    _this2.value = value;
+
+    _this2.init();
+    return _this2;
+  }
+
+  createClass(Placeholder, [{
+    key: 'init',
+    value: function init() {
+      var _style = this.style,
+          width = _style.width,
+          height = _style.height;
+
+      this.width = width || 0;
+      this.height = height || 0;
+    }
+  }, {
+    key: 'replace',
+    value: function replace(width) {
+      this.width = width;
+    }
+  }]);
+  return Placeholder;
+}(Identifier$1);
+
+var MathTag$1 = function (_Placeholder) {
+  inherits(MathTag, _Placeholder);
+
+  function MathTag() {
+    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var style = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    classCallCheck(this, MathTag);
+
+    var _this3 = possibleConstructorReturn(this, (MathTag.__proto__ || Object.getPrototypeOf(MathTag)).call(this));
+
+    _this3.name = name;
+    _this3.attrs = attrs;
+    _this3.style = style;
+    _this3.value = 'M';
+
+    _this3.init();
+    return _this3;
+  }
+
+  return MathTag;
+}(Placeholder$1);
+
+var Text$1 = function (_Placeholder2) {
+  inherits(Text, _Placeholder2);
+
+  function Text() {
+    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var style = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var value = arguments[2];
+    classCallCheck(this, Text);
+
+    var _this4 = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this));
+
+    _this4.attrs = attrs;
+    _this4.style = style;
+    _this4.value = value;
+    _this4.real = value;
+
+    _this4.init();
+    return _this4;
+  }
+
+  createClass(Text, [{
+    key: 'init',
+    value: function init() {
+      getFontWidth(this.real);
+    }
+  }]);
+  return Text;
+}(Placeholder$1);
+
+var Space$1 = function (_Text) {
+  inherits(Space, _Text);
+
+  function Space() {
+    classCallCheck(this, Space);
+
+    var _this5 = possibleConstructorReturn(this, (Space.__proto__ || Object.getPrototypeOf(Space)).call(this));
+
+    _this5.value = '&nbsp';
+    _this5.real = '\b';
+
+    _this5.init();
+    return _this5;
+  }
+
+  return Space;
+}(Text$1);
+
+var Tab$1 = function (_Text2) {
+  inherits(Tab, _Text2);
+
+  function Tab() {
+    classCallCheck(this, Tab);
+
+    var _this6 = possibleConstructorReturn(this, (Tab.__proto__ || Object.getPrototypeOf(Tab)).call(this));
+
+    _this6.value = '&nbsp&nbsp&nbsp&nbsp';
+    _this6.real = '\b\b\b\b';
+
+    _this6.init();
+    return _this6;
+  }
+
+  return Tab;
+}(Text$1);
+
+var Enter$1 = function (_Text3) {
+  inherits(Enter, _Text3);
+
+  function Enter() {
+    classCallCheck(this, Enter);
+
+    var _this7 = possibleConstructorReturn(this, (Enter.__proto__ || Object.getPrototypeOf(Enter)).call(this));
+
+    _this7.name = 'br';
+    _this7.value = '';
+    _this7.real = '\n';
+    return _this7;
+  }
+
+  return Enter;
+}(Text$1);
+
+function words() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+  var action = arguments[1];
+  var editorState = arguments[2];
+  var location = editorState.location,
+      origin = editorState.origin;
+
+  switch (action.type) {
+    case ADD_KEY:
+      state = [].concat(toConsumableArray(state));
+      state.splice(location, 0, action.value);
+      return state;
+
+    case BACKSPACE:
+      {
+        state = [].concat(toConsumableArray(state));
+        state.splice(location, 1);
+        return state;
+      }
+
+    case ADD_B:
+      {
+        var a = origin,
+            b = location;
+        if (a == b) return state;
+
+        if (a > b) {
+          var c = b;
+          b = a;
+          a = c;
+        }
+        state = [].concat(toConsumableArray(state));
+
+        var w = new Style$1();
+        state.splice(a, 0, w);
+        state.splice(b + 1, 0, w.end());
+        return state;
+      }
+
+    default:
+      return state;
+  }
+}
+
+var initEditorState = {
+  location: 0,
+  origin: 0,
+  rowsIndex: [],
+  shiftKey: false,
+  ctrlKey: false,
+  altKey: false
+};
+function editorState() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initEditorState;
+  var action = arguments[1];
+
+  switch (action.type) {
+
+    case SET_LOCATION:
+      return Object.assign({}, state, {
+        location: action.value
+      });
+
+    case SET_ORIGIN:
+      return Object.assign({}, state, {
+        origin: action.value
+      });
+
+    case S_C_A_KEY:
+      {
+        var _action$value = action.value,
+            shiftKey = _action$value.shiftKey,
+            ctrlKey = _action$value.ctrlKey,
+            altKey = _action$value.altKey;
+
+        return Object.assign({}, state, {
+          shiftKey: shiftKey, ctrlKey: ctrlKey, altKey: altKey
+        });
+      }
+
+    default:
+      return state;
+  }
+}
+
+function app() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var action = arguments[1];
+
+  var _editorState = editorState(state.editorState, action);
+
+  return {
+    editorState: _editorState,
+    words: words(state.words, action, _editorState)
+  };
+}
+
+var store = createStore(app);
+
+var Preview = { render: function render() {
+    var _vm = this;var _h = _vm.$createElement;var _c = _vm._self._c || _h;return _c('div', { staticClass: "icons" }, [_c('span', { staticClass: "icon", on: { "click": _vm.clickingBold } }, [_vm._v("B")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingAutoLinefeed } }, [_vm._v("Linefeed")]), _vm._v(" "), _c('span', { staticClass: "icon", on: { "click": _vm.clickingMath } }, [_vm._v("Math")])]);
+  }, staticRenderFns: [], _scopeId: 'data-v-7b124cdc',
+  data: function data() {
+    return {
+      autoLinefeed: false
+    };
+  },
+
+  methods: {
+    clickingBold: function clickingBold(event) {
+      this.$emit('clickingTools', 'bold');
+    },
+    clickingAutoLinefeed: function clickingAutoLinefeed(event) {
+      this.$emit('clickingTools', 'autoLinefeed', this.autoLinefeed);
+      this.autoLinefeed = !this.autoLinefeed;
+    },
+    clickingMath: function clickingMath(event) {
+      this.$emit('clickingTools', 'math');
+    }
+  }
+};
+
 function addKey(word) {
   return { type: ADD_KEY, value: word };
 }
@@ -808,11 +1021,8 @@ function addB() {
 function setLocation(location) {
   return { type: SET_LOCATION, value: location };
 }
-function setOrigin(location) {
+function setOrigin$1(location) {
   return { type: SET_ORIGIN, value: location };
-}
-function setRowsIndex(location) {
-  return { type: SET_ROWS_INDEX, value: location };
 }
 function removeRowsIndex(values) {
   if (!(values instanceof Array)) {
@@ -830,15 +1040,29 @@ var unsubscribe = store.subscribe(function () {
   tree = store.getState();
 });
 
-function addSpace() {
-  store.dispatch(addKey(placeholder$1('space')));
+function addWord(key) {
+  if (key == ' ') {
+    store.dispatch(addKey(new Space$1()));
+  } else if (key == 'Tab') {
+    store.dispatch(addKey(new Tab$1()));
+  } else {
+    store.dispatch(addKey(new Text$1(key)));
+  }
+
   store.dispatch(setLocation(tree.editorState.location + 1));
+  store.dispatch(setOrigin$1(tree.editorState.location));
 }
+
+
+
 function addEnter() {
-  store.dispatch(setRowsIndex(tree.editorState.location));
-  store.dispatch(addKey(enter$1('br')));
+  store.dispatch(addKey(new Enter$1()));
   store.dispatch(setLocation(tree.editorState.location + 1));
+  store.dispatch(setOrigin$1(tree.editorState.location));
 }
+
+var Style$2 = Style$1;
+
 
 var tree$1 = {};
 
@@ -862,6 +1086,10 @@ function moveUp$1() {
     }
     var loc = a == 0 ? x : a + x + 1;
     store.dispatch(setLocation(loc));
+
+    if (!tree$1.editorState.shiftKey) {
+      store.dispatch(setOrigin(tree$1.editorState.location));
+    }
   }
 }
 function moveDown$1() {
@@ -878,6 +1106,10 @@ function moveDown$1() {
     }
     var loc = tree$1.editorState.rowsIndex[y] + x + 1;
     store.dispatch(setLocation(loc));
+
+    if (!tree$1.editorState.shiftKey) {
+      store.dispatch(setOrigin(tree$1.editorState.location));
+    }
   }
 }
 function moveLeft$1() {
@@ -888,10 +1120,13 @@ function moveLeft$1() {
     var x = tree$1.editorState.location - 1;
     var word = tree$1.words[x];
 
-    if (word.type == 'style' || word.type == 'closed') {
+    if (word instanceof Style$2) {
       store.dispatch(setLocation(x));
     } else {
       store.dispatch(setLocation(x));
+      if (!tree$1.editorState.shiftKey) {
+        store.dispatch(setOrigin(tree$1.editorState.location));
+      }
       break;
     }
   }
@@ -903,14 +1138,22 @@ function moveRight$1() {
     }
     var x = tree$1.editorState.location + 1;
     var word = tree$1.words[x];
-    if (word && (word.type == 'style' || word.type == 'closed')) {
+    if (word instanceof Style$2) {
       store.dispatch(setLocation(x));
     } else {
       store.dispatch(setLocation(x));
+      if (!tree$1.editorState.shiftKey) {
+        store.dispatch(setOrigin(tree$1.editorState.location));
+      }
       break;
     }
   }
 }
+
+var Style$3 = Style$1;
+var Placeholder$3 = Placeholder$1;
+var Enter$3 = Enter$1;
+
 
 var tree$2 = {};
 
@@ -925,8 +1168,8 @@ function delBackspace() {
     if (location <= 0) break;
     var word = tree$2.words[location - 1];
 
-    if (word.type != 'style' && word.type != 'closed') {
-      if (word.type == 'enter') {
+    if (word instanceof Placeholder$3) {
+      if (word instanceof Enter$3) {
         store.dispatch(removeRowsIndex(location - 1));
       }
       store.dispatch(setLocation(location - 1));
@@ -936,18 +1179,20 @@ function delBackspace() {
       if (!word) {
         break;
       }
-      if (word.type != 'style' && word.type != 'closed') {
+      if (word instanceof Placeholder$3) {
         break;
       }
-      if (tree$2.words[tree$2.editorState.location] == 'closed') {
+      word = tree$2.words[tree$2.editorState.location];
+      if (word instanceof Style$3 && word.header) {
         //遇到空的样式结点就删除
-        if (tree$2.words[tree$2.editorState.location - 1] == 'style') {
+        var last = tree$2.words[tree$2.editorState.location - 1];
+        if (word.header === last) {
           store.dispatch(setLocation(tree$2.editorState.location - 1));
           store.dispatch(backspace());
           store.dispatch(setLocation(tree$2.editorState.location - 1));
           store.dispatch(backspace());
         }
-      } else if (word.type == 'style') {
+      } else if (word instanceof Style$3) {
         break;
       }
     } else {
@@ -956,36 +1201,39 @@ function delBackspace() {
   }
 }
 
-var text = text$1;
-var placeholder = placeholder$1;
-var style = style$1;
-var closed = closed$1;
+var Style = Style$1;
+var Placeholder = Placeholder$1;
+var MathTag = MathTag$1;
 
 
 function renderContent(h, i) {
   var _children = [];
   for (; i < this._words.length; i++) {
     var w = this._words[i];
-    if (w.type == 'style') {
-      var _renderContent$call = renderContent.call(this, h, i + 1),
-          children = _renderContent$call.children,
-          index = _renderContent$call.index;
+    var len = _children.length;
+    if (w instanceof Style) {
+      if (w.end) {
+        var _renderContent$call = renderContent.call(this, h, i + 1),
+            children = _renderContent$call.children,
+            index = _renderContent$call.index;
 
-      var attrs = Object.assign({}, w.attrs);
-      console.log(w.name, attrs, children);
-      _children[_children.length] = h(w.name, attrs, children);
-      i = index;
-    } else if (w.type == 'closed') {
-      return { children: _children, index: i };
-    } else if (w.type == 'placeholder' || w.type == 'enter') {
-      var _attrs = Object.assign({}, w.attrs);
-      _children[_children.length] = h(w.name, _attrs, w.value);
-    } else {
-      // console.log(w.value)
-      _children[_children.length] = w.value;
+        var attrs = Object.assign({}, w.attrs);
+
+        _children[len] = h(w.name, attrs, children);
+        i = index;
+      } else {
+        return { children: _children, index: i };
+      }
+    } else if (w instanceof Placeholder) {
+      if (w instanceof MathTag) {
+        var _attrs = Object.assign({}, w.attrs, w.style);
+        _children[len] = h(w.name, _attrs, w.value);
+      } else {
+        _children[len] = h(w.name, { domProps: { innerHTML: w.value } });
+      }
     }
   }
-  // console.log(_children)
+  console.log(_children);
   return _children;
 }
 
@@ -1036,37 +1284,40 @@ var App = { _scopeId: 'data-v-04c2046b',
       var offsetWidth = 0;
       var width = 0;
       var rowNum = 0;
-      for (var i = 0; i < words.length; i++) {
-        var w = words[i];
-        if (w.type == 'text') {
-          if (this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width) {
+      /*
+      for(let i=0;i<words.length;i++){
+        let w = words[i];
+        if(w.type == 'text'){
+          if(this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width){
             text = '';
             offsetWidth = 0;
-            rowNum++;
+            rowNum++
           }
           text += w.value;
-          var _width = getFontWidth(text);
-
-          w.width = offsetWidth + _width;
+          let width = getFontWidth(text);
+          
+          w.width  = offsetWidth + width;
           w.rowNum = rowNum;
-        } else if (w.type == 'enter') {
+        }else if(w.type == 'enter'){
           text = '';
-          w.width = width;
+          w.width  = width;
           w.rowNum = rowNum++;
-        } else if (w.type == 'placeholder') {
-          if (this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width) {
+        }else if(w.type == 'placeholder'){
+          if(this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width){
             text = '';
             offsetWidth = 0;
-            rowNum++;
+            rowNum++
           }
-          var _width2 = getFontWidth(text);
-          offsetWidth += w.attrs.attrs.width;
-          w.width = offsetWidth + _width2;
-
+          let width = getFontWidth(text);
+          offsetWidth += w.attrs.attrs.width
+          w.width  = offsetWidth + width;
+          
           w.rowNum = rowNum;
         }
       }
       // console.log(words.map(o=>o.value))
+      */
+
       if (origin == location) {
         return words;
       }
@@ -1078,13 +1329,13 @@ var App = { _scopeId: 'data-v-04c2046b',
         a = c;
       }
       var arr = this.words.slice(a, b);
-      arr.unshift(style('span', {
-        style: {
-          'line-height': this.lineHeight + 'px',
-          background: '#3390ff'
-        }
-      }));
-      arr.push(closed());
+      var start = new Style({
+        'line-height': this.lineHeight + 'px',
+        background: '#3390ff'
+      });
+
+      arr.unshift(start);
+      arr.push(start.end());
       words.splice.apply(words, [a, b - a].concat(toConsumableArray(arr)));
 
       return words;
@@ -1147,17 +1398,15 @@ var App = { _scopeId: 'data-v-04c2046b',
         store.dispatch(addB());
 
         store.dispatch(setLocation(this.state.location + 1));
-        store.dispatch(setOrigin(this.state.origin + 1));
+        store.dispatch(setOrigin$1(this.state.origin + 1));
       } else if (name == 'autoLinefeed') {
         this.autoLinefeed = arguments.length <= 1 ? undefined : arguments[1];
       } else if (name == 'math') {
         var width = getFontWidth('M') * 1.4;
-        var node1 = placeholder('M', 'math_tag', { width: width + 'px' }, { width: width });
-        var node2 = placeholder('M', 'math_tag', { width: width + 'px' }, { width: width });
-        store.dispatch(addKey(node1));
-        store.dispatch(setLocation(this.state.location + 1));
-        store.dispatch(setOrigin(this.state.location));
-        store.dispatch(addKey(node2));
+        var start = new Math({ width: width }, { width: width + 'px' }, 'M');
+        addPlaceholder(start);
+        addPlaceholder(start.end());
+        moveLeft$1();
       }
     },
     keydown: function keydown(event) {
@@ -1178,8 +1427,7 @@ var App = { _scopeId: 'data-v-04c2046b',
 
         if (code.slice(0, 3) == 'Key' || code.slice(0, 3) == 'Dig') {
           // 主键盘字母&数字
-          store.dispatch(addKey(text(key)));
-          store.dispatch(setLocation(location + 1));
+          addWord(key);
         }
 
         switch (code) {
@@ -1215,8 +1463,7 @@ var App = { _scopeId: 'data-v-04c2046b',
           case 'NumpadMultiply': // *
           case 'NumpadDivide':
             // /
-            store.dispatch(addKey(text(key)));
-            store.dispatch(setLocation(location + 1));
+            addWord(key);
         }
 
         switch (code) {
@@ -1245,9 +1492,6 @@ var App = { _scopeId: 'data-v-04c2046b',
             break;
         }
 
-        if (!shiftKey) {
-          store.dispatch(setOrigin(this.state.location));
-        }
         event.preventDefault();
       } else {
         this.isProcess = true;
@@ -1256,20 +1500,17 @@ var App = { _scopeId: 'data-v-04c2046b',
       // event.preventDefault();
     },
     oninput: function oninput(event) {
-      var _this = this;
-
       var _event$target = event.target,
           selectionStart = _event$target.selectionStart,
           selectionEnd = _event$target.selectionEnd;
 
 
       if (this.isProcess && selectionStart == selectionEnd) {
-        var _text = [].concat(toConsumableArray(event.target.innerHTML));
+        var text = [].concat(toConsumableArray(event.target.innerHTML));
         window.el = event.target;
 
-        _text.forEach(function (s) {
-          store.dispatch(addKey(_text(s)));
-          store.dispatch(setLocation(_this.state.location + 1));
+        text.forEach(function (s) {
+          addWord(s);
         });
         this.isProcess = false;
         // event.target.innerHTML = '';
@@ -1280,7 +1521,7 @@ var App = { _scopeId: 'data-v-04c2046b',
     },
     submit: function submit(event) {
       var text = this.words.map(function (w) {
-        if (w.type == "text") {
+        if (w.constructor.name == 'Text') {
           return w.value;
         }
       }).join('');
@@ -1289,10 +1530,10 @@ var App = { _scopeId: 'data-v-04c2046b',
   },
 
   created: function created() {
-    var _this2 = this;
+    var _this = this;
 
     var unsubscribe = store.subscribe(function () {
-      setData(_this2, store.getState());
+      setData(_this, store.getState());
     });
     store.dispatch(setLocation(0));
   },
@@ -1306,13 +1547,13 @@ var App = { _scopeId: 'data-v-04c2046b',
     sp.innerHTML = 'a';
     document.body.appendChild(sp);
 
-    this.hheadAscent = sp.offsetHeight / 1000;
+    this.hheadAscent = sp.offsetHeight / 1000; // 获取真实行高比
   },
   render: function render(h) {
-    var _this3 = this;
+    var _this2 = this;
 
     var data = renderContent.call(this, h, 0);
-    // console.log(data)
+    console.log(data);
     return h(
       'div',
       { 'class': 'xianEditor', on: {
@@ -1340,10 +1581,10 @@ var App = { _scopeId: 'data-v-04c2046b',
               'keydown': this.keydown,
               'input': this.oninput,
               'focus': function focus() {
-                return _this3.isFocused = true;
+                return _this2.isFocused = true;
               },
               'blur': function blur() {
-                return _this3.isFocused = false;
+                return _this2.isFocused = false;
               }
             }
           },

@@ -7,5 +7,5 @@ export const MOVE_UP = 'MOVE_UP'
 export const MOVE_DOWN = 'MOVE_DOWN'
 export const SET_ROWS_INDEX = 'SET_ROWS_INDEX'
 export const REMOVE_ROWS_INDEX = 'REMOVE_ROWS_INDEX'
-export const S_C_A_KEY = 'S_C_A_KEY'
+export const S_C_A_KEY = 'S_C_A_KEY'  //shift ctrl alt
 

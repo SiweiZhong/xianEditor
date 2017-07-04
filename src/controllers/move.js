@@ -1,6 +1,8 @@
 import store from '../reducers'
-import {whereAmI} from '../util/'
 import {setLocation} from '../actions'
+import {whereAmI, nodeTypes} from '../util/'
+
+const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
 let tree = {};
 
@@ -22,6 +24,10 @@ export function moveUp(){
     }
     const loc = a == 0 ? x : a + x + 1;
     store.dispatch(setLocation(loc));
+
+    if(!tree.editorState.shiftKey){
+      store.dispatch(setOrigin(tree.editorState.location));
+    }
   }
 }
 export function moveDown(){
@@ -35,6 +41,10 @@ export function moveDown(){
     }
     const loc = tree.editorState.rowsIndex[y] + x + 1;
     store.dispatch(setLocation(loc));
+
+    if(!tree.editorState.shiftKey){
+      store.dispatch(setOrigin(tree.editorState.location));
+    }
   }
 }
 export function moveLeft(){
@@ -45,10 +55,13 @@ export function moveLeft(){
     const x = tree.editorState.location-1
     const word = tree.words[x];
 
-    if(word.type=='style' || word.type=='closed'){
+    if(word instanceof Style){
       store.dispatch(setLocation(x));
     }else{
       store.dispatch(setLocation(x));
+      if(!tree.editorState.shiftKey){
+        store.dispatch(setOrigin(tree.editorState.location));
+      }
       break
     }
   }
@@ -60,10 +73,13 @@ export function moveRight(){
     }
     const x = tree.editorState.location + 1
     let word = tree.words[x];
-    if(word && (word.type=='style' || word.type=='closed')){
+    if(word instanceof Style){
       store.dispatch(setLocation(x));
     }else{
       store.dispatch(setLocation(x));
+      if(!tree.editorState.shiftKey){
+        store.dispatch(setOrigin(tree.editorState.location));
+      }
       break
     }
   }
