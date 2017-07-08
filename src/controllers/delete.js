@@ -1,6 +1,6 @@
 import store from '../reducers'
-import {removeRowsIndex, setLocation, backspace} from '../actions'
-import {nodeTypes} from '../util/'
+import {setLocation, setOrigin, backspace} from '../actions'
+import {nodeTypes, getFontWidth, updateWordsProps} from '../util/'
 
 const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
@@ -17,9 +17,7 @@ export function delBackspace(){
     let word = tree.words[location-1];
     
     if(word instanceof Placeholder){
-      if(word instanceof Enter){
-        store.dispatch(removeRowsIndex(location-1));
-      }
+
       store.dispatch(setLocation(location-1));
       store.dispatch(backspace());
     
@@ -31,7 +29,7 @@ export function delBackspace(){
         break;
       }
       word = tree.words[tree.editorState.location];
-      if(word instanceof Style && word.header){ //遇到空的样式结点就删除
+      if(word instanceof Style && word.header){ //遇到空的样式节点就删除
         const last = tree.words[tree.editorState.location-1];
         if(word.header === last){
           store.dispatch(setLocation(tree.editorState.location-1));
@@ -46,4 +44,6 @@ export function delBackspace(){
       store.dispatch(setLocation(tree.editorState.location-1));
     }
   }
+  store.dispatch(setOrigin(tree.editorState.location));
+  updateWordsProps()
 }

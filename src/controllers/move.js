@@ -1,5 +1,5 @@
 import store from '../reducers'
-import {setLocation} from '../actions'
+import {setLocation, setOrigin} from '../actions'
 import {whereAmI, nodeTypes} from '../util/'
 
 const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
@@ -12,47 +12,65 @@ const unsubscribe = store.subscribe(()=>{
 
 
 export function moveUp(){
-  let {x, y} = whereAmI(tree.editorState.rowsIndex, tree.editorState.location);
-  if(y !== 0){
-    let a = tree.editorState.rowsIndex[y-2] || 0;
-    let b = tree.editorState.rowsIndex[y-1] - a;
+  if(tree.words.length == 0) return;
 
-    //本行长度比上一行长时，定位到上行结尾, b是个数,x是下标
-    if(x > b-1){
-      x = b; //a==0是边界情况
-      if(a > 0) x--; 
+  let {x, y} = whereAmI(tree.words, tree.editorState.location);//x y是下标从零计数
+  let loc = tree.editorState.location;
+  let n = 0;
+  let i = loc > 0 ? loc-1 : 0;
+  for(;i>=0;i--){
+    if(tree.words[i].rowNum < y-1){
+      break;
     }
-    const loc = a == 0 ? x : a + x + 1;
-    store.dispatch(setLocation(loc));
 
-    if(!tree.editorState.shiftKey){
-      store.dispatch(setOrigin(tree.editorState.location));
+    loc--;
+    if(tree.words[i].rowNum == y-1){
+      n++;
     }
+    
+  }
+  // console.log(n, loc)
+  loc += n > x ? x : n-1;
+  loc = loc < 0 ? 0 : loc;
+
+  
+  store.dispatch(setLocation(loc));
+  if(!tree.editorState.shiftKey){
+    store.dispatch(setOrigin(tree.editorState.location));
   }
 }
 export function moveDown(){
-  let {x, y} = whereAmI(tree.editorState.rowsIndex, tree.editorState.location);
-  if(y !== tree.editorState.rowsIndex.length){
-    let a = tree.editorState.rowsIndex[y+1] || tree.words.length; //相当于最后一位补了换行符
-    let b = a - tree.editorState.rowsIndex[y];
+  if(tree.words.length == 0) return;
 
-    if(x > b-1){
-      x = b-1
-    }
-    const loc = tree.editorState.rowsIndex[y] + x + 1;
-    store.dispatch(setLocation(loc));
+  let {x, y} = whereAmI(tree.words, tree.editorState.location);
+  
+  let loc = tree.editorState.location;
+  let n = 0;
 
-    if(!tree.editorState.shiftKey){
-      store.dispatch(setOrigin(tree.editorState.location));
+  const length = tree.words.length;
+  let i = loc == length-1 ? length : loc;
+  for(;i<length;i++){
+    if(tree.words[i].rowNum > y+1){
+      break;
     }
+
+    loc++;
+    if(tree.words[i].rowNum == y+1){
+      if(n == x){
+        break;
+      }
+      n++;
+    }
+  }
+  store.dispatch(setLocation(loc));
+
+  if(!tree.editorState.shiftKey){
+    store.dispatch(setOrigin(tree.editorState.location));
   }
 }
 export function moveLeft(){
-  while(1){
-    if(tree.editorState.location == 0){
-      break;
-    }
-    const x = tree.editorState.location-1
+  while(tree.editorState.location > 0){
+    const x = tree.editorState.location-1;
     const word = tree.words[x];
 
     if(word instanceof Style){
@@ -67,10 +85,7 @@ export function moveLeft(){
   }
 }
 export function moveRight(){
-  while(1){
-    if(tree.editorState.location == tree.words.length){
-      break;
-    }
+  while(tree.editorState.location < tree.words.length){
     const x = tree.editorState.location + 1
     let word = tree.words[x];
     if(word instanceof Style){

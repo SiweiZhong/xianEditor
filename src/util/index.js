@@ -1,16 +1,31 @@
 import * as nodeTypes from './nodeTypes'
 
-function whereAmI(arr, loc){
-  let x=0,y=0;
-  for(let i=0;i<arr.length;i++){
-    if(arr[i] >= loc){
+function whereAmI(words, location){
+  let x = 0;
+  let loc = location;
+
+  if(words.length == 0){
+    return {x:0, y:0};
+  }else if(loc == words.length){ // 光标在结尾处时
+    loc--;
+    x++;
+    if(words[loc] instanceof nodeTypes.Enter){
+      return {x:0, y:words[loc].rowNum+1};
+    }
+  }
+
+  const word = words[loc];
+  const y = word.rowNum;
+  for(let i=loc;i>=0;i--){
+    const w = words[i];
+    if(w.rowNum == word.rowNum){
+      x++;
+    }else{
       break;
     }
-    y++;
-    x = arr[i];
   }
-  x = x == 0 ? loc : loc - x - 1;
-  
+  x--;
+
   return {x, y};
 }
 
@@ -36,4 +51,49 @@ function setData(self, state){
   self.words = state.words;
 }
 
-export {nodeTypes, whereAmI, setData, getFontWidth}
+
+function updateWordsProps (){
+  let {location} = tree.editorState;
+  if(tree.words.length == 0){
+    return;
+  }
+
+  while(location <= tree.words.length){
+    let loc = location
+    let word = tree.words[--loc];
+    let rowNum;
+    let text = '';
+
+    if(!word){
+      location++;
+      continue;
+    }
+
+    while(loc > 0){
+      let last = tree.words[--loc];
+      if(rowNum == undefined){
+        rowNum = last.rowNum;
+      }
+      if(last.rowNum != rowNum){
+        break;
+      }
+      text += last.real;
+
+      if(loc < 0) break;
+    }
+    word.rowNum = rowNum || 0;
+    
+    let width = getFontWidth(text + word.real);
+    if(width > tree.editorState.width){
+      width = getFontWidth(word.real);
+      word.rowNum++;
+    }
+    word.width = width;
+
+    location++;
+  }
+}
+
+
+
+export {nodeTypes, whereAmI, setData, getFontWidth, updateWordsProps}

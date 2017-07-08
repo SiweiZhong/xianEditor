@@ -26,4 +26,10 @@ function removeRowsIndex (values){
 function scaKey (shiftKey, ctrlKey, altKey){
   return {type: constants.S_C_A_KEY, value: {shiftKey, ctrlKey, altKey}}
 }
-export {moveLeft, moveRight, moveUp, moveDown, setLocation, setOrigin, removeRowsIndex, scaKey}
+function setWidth (width){
+  return {type: constants.SET_WIDTH, value: width}
+}
+function setHeight (height){
+  return {type: constants.SET_HEIGHT, value: height}
+}
+export {moveLeft, moveRight, moveUp, moveDown, setLocation, setOrigin, removeRowsIndex, scaKey, setWidth, setHeight}

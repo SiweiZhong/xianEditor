@@ -28,6 +28,16 @@ export function editorState(state=initEditorState, action){
       })
     }
 
+    case constants.SET_WIDTH:
+      return Object.assign({}, state, {
+        width: action.value
+      })
+
+    case constants.SET_HEIGHT:
+      return Object.assign({}, state, {
+        height: action.value
+      })
+
     default:
       return state;
   }

@@ -4,8 +4,8 @@ class Identifier {
   constructor (){
     
   }
-  end (){
-    const ident = new Identifier();
+  createEndIdentifier (){
+    const ident = new this.constructor();
     ident.header = this;
     this.end = ident;
     return ident;
@@ -14,12 +14,12 @@ class Identifier {
 class Style extends Identifier {
   constructor (style={}){
     super();
-    this.name == 'span';
+    this.name = 'span';
     this.style = style;
     this.init()
   }
   init (){
-    this.width = this.style.width;
+    this.width = this.style.width || 0;
   }
   replace (width){
     this.width = width;
@@ -60,18 +60,15 @@ class MathTag extends Placeholder {
 }
 
 class Text extends Placeholder {
-  constructor (attrs={}, style={}, value){
+  constructor (value){
     super();
-
-    this.attrs = attrs;
-    this.style = style;
+    this.name = 'span';
     this.value = value;
     this.real = value;
-    
-    this.init()
+    this.width = 0;
   }
-  init (){
-    getFontWidth(this.real);
+  setWidth (){
+    
   }
 }
 
@@ -80,9 +77,7 @@ class Space extends Text {
     super();
 
     this.value = '&nbsp';
-    this.real = '\b';
-
-    this.init()
+    this.real = '\x20';
   }
 }
 
@@ -91,9 +86,7 @@ class Tab extends Text {
     super();
     
     this.value = '&nbsp&nbsp&nbsp&nbsp';
-    this.real = '\b\b\b\b';
-
-    this.init()
+    this.real = '\x20\x20\x20\x20';
   }
 }
 

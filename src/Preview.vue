@@ -44,6 +44,7 @@ export default {
   line-height: 1.6em;
   min-width: 1.42em;
   text-align: center;
+  user-select: none;
   display: inline-block;
   box-sizing: border-box;
 
