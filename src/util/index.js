@@ -51,49 +51,4 @@ function setData(self, state){
   self.words = state.words;
 }
 
-
-function updateWordsProps (){
-  let {location} = tree.editorState;
-  if(tree.words.length == 0){
-    return;
-  }
-
-  while(location <= tree.words.length){
-    let loc = location
-    let word = tree.words[--loc];
-    let rowNum;
-    let text = '';
-
-    if(!word){
-      location++;
-      continue;
-    }
-
-    while(loc > 0){
-      let last = tree.words[--loc];
-      if(rowNum == undefined){
-        rowNum = last.rowNum;
-      }
-      if(last.rowNum != rowNum){
-        break;
-      }
-      text += last.real;
-
-      if(loc < 0) break;
-    }
-    word.rowNum = rowNum || 0;
-    
-    let width = getFontWidth(text + word.real);
-    if(width > tree.editorState.width){
-      width = getFontWidth(word.real);
-      word.rowNum++;
-    }
-    word.width = width;
-
-    location++;
-  }
-}
-
-
-
 export {nodeTypes, whereAmI, setData, getFontWidth, updateWordsProps}

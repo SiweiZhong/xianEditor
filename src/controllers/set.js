@@ -1,6 +1,7 @@
 import store from '../reducers'
 
-import {getFontWidth, updateWordsProps} from '../util'
+import {getFontWidth} from '../util'
+import {updateWordsProps} from './public'
 
 import {addKey, setLocation, setOrigin} from '../actions'
 import {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} from '../util/nodeTypes'
@@ -20,7 +21,7 @@ export function addWord (key){
   }else{
     word = new Text(key)
   }
-  setWordProps(word);
+  // setWordProps(word);
   store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));
   store.dispatch(setOrigin(tree.editorState.location));
@@ -36,7 +37,7 @@ export function addPlaceholder (node){
 
 export function addEnter (){
   const word = new Enter()
-  setWordProps(word);
+  // setWordProps(word);
 
   store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));

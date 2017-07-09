@@ -1,6 +1,7 @@
 import store from '../reducers'
 import {setLocation, setOrigin, backspace} from '../actions'
-import {nodeTypes, getFontWidth, updateWordsProps} from '../util/'
+import {nodeTypes, getFontWidth} from '../util/'
+import {updateWordsProps} from './public'
 
 const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 

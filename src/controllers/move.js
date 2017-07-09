@@ -15,6 +15,7 @@ export function moveUp(){
   if(tree.words.length == 0) return;
 
   let {x, y} = whereAmI(tree.words, tree.editorState.location);//x y是下标从零计数
+  
   let loc = tree.editorState.location;
   let n = 0;
   let i = loc > 0 ? loc-1 : 0;
@@ -29,7 +30,6 @@ export function moveUp(){
     }
     
   }
-  // console.log(n, loc)
   loc += n > x ? x : n-1;
   loc = loc < 0 ? 0 : loc;
 
@@ -43,7 +43,7 @@ export function moveDown(){
   if(tree.words.length == 0) return;
 
   let {x, y} = whereAmI(tree.words, tree.editorState.location);
-  
+
   let loc = tree.editorState.location;
   let n = 0;
 
@@ -54,13 +54,13 @@ export function moveDown(){
       break;
     }
 
-    loc++;
     if(tree.words[i].rowNum == y+1){
       if(n == x){
         break;
       }
       n++;
     }
+    loc++;
   }
   store.dispatch(setLocation(loc));
 
