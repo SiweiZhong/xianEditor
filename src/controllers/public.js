@@ -9,8 +9,8 @@ const unsubscribe = store.subscribe(()=>{
   tree = store.getState();
 })
 
-export function updateWordsProps (){
-  let {location} = tree.editorState;
+export function updateWordsProps (location){
+  // let {location} = tree.editorState;
   if(tree.words.length == 0){
     return;
   }
@@ -45,9 +45,10 @@ export function updateWordsProps (){
     word.rowNum = rowNum || 0;
     
     let width = getFontWidth(text + word.real);
+    console.log(tree.editorState.autoLinefeed)
     if(tree.words[location-2] instanceof Enter){ 
       width = getFontWidth(word.real);
-    }else if(width > tree.editorState.width){
+    }else if(tree.editorState.autoLinefeed && width > tree.editorState.width){
       width = getFontWidth(word.real);
       word.rowNum++;
     }

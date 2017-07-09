@@ -1,12 +1,8 @@
 <template> 
   <div class="icons">
     <span class="icon" @click="clickingBold">B</span>
-    <span class="icon" @click="clickingAutoLinefeed">Linefeed</span>
+    <!--<span class="icon" @click="clickingAutoLinefeed">Linefeed</span>-->
     <span class="icon" @click="clickingMath">Math</span>
-    <!--<span class="icon">I</span>
-    <span class="icon">U</span>
-    <span class="icon">link</span>-->
-    <!--<div style={{display: this.link || 'none'}}></div>-->
   </div>
 </template>
 <script>

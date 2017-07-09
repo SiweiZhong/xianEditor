@@ -4,7 +4,7 @@ import store from './reducers'
 import Preview from './Preview.vue'
 
 import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
-import {addKey, addB, backspace, setLocation, setOrigin, removeRowsIndex, scaKey, setWidth, setHeight} from './actions'
+import {addKey, addB, backspace, setLocation, setOrigin, scaKey, setWidth, setHeight, setAutoLinefeed} from './actions'
 
 import {
   addWord, addEnter, 
@@ -153,8 +153,6 @@ export default {
         
         store.dispatch(setLocation(this.state.location+1));
         store.dispatch(setOrigin(this.state.origin + 1));
-      }else if(name == 'autoLinefeed'){
-        this.autoLinefeed = arg[0];
       }else if(name == 'math'){
         let width = getFontWidth('M') * 1.4;
         const start = new Math({width}, {width:width+'px'}, 'M');

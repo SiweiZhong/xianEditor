@@ -7,6 +7,7 @@ const initEditorState = {
   shiftKey: false,
   ctrlKey: false,
   altKey: false,
+  autoLinefeed: true,
 }
 export function editorState(state=initEditorState, action){
   switch(action.type){
@@ -36,6 +37,11 @@ export function editorState(state=initEditorState, action){
     case constants.SET_HEIGHT:
       return Object.assign({}, state, {
         height: action.value
+      })
+
+    case constants.AUTO_LINEFEED:
+      return Object.assign({}, state, {
+        autoLinefeed: action.value
       })
 
     default:

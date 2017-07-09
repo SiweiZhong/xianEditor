@@ -46,5 +46,5 @@ export function delBackspace(){
     }
   }
   store.dispatch(setOrigin(tree.editorState.location));
-  updateWordsProps()
+  updateWordsProps(tree.editorState.location)
 }

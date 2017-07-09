@@ -26,7 +26,7 @@ export function addWord (key){
   store.dispatch(setLocation(tree.editorState.location+1));
   store.dispatch(setOrigin(tree.editorState.location));
   
-  updateWordsProps();
+  updateWordsProps(tree.editorState.location);
 }
 
 export function addPlaceholder (node){
@@ -42,7 +42,7 @@ export function addEnter (){
   store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));
   store.dispatch(setOrigin(tree.editorState.location));
-  updateWordsProps();
+  updateWordsProps(tree.editorState.location);
 }
 
 function setWordProps (word){
