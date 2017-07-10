@@ -25,7 +25,7 @@ export function words(state=[], action, editorState){
       a = c;
     }
     state = [...state];
-
+    
     const w = new Style({'font-weight': 'bold'});
     state.splice(a, 0, w);
     state.splice(b+1, 0, w.createEndIdentifier());
