@@ -12,9 +12,15 @@ new Vue({
     showDialog: false,
   },
   methods: {
-    preview (){
-      console.log(123)
+    preview (text){
       this.showDialog = true;
+      this.text = text;
+      
+      setTimeout(function(){
+        const els = document.querySelectorAll('.math_tag')
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, Array.from(els)]);
+      })
+      // MathJax.Hub.Queue(["Typeset", MathJax.Hub, Array.from(els)]);
     },
     hidingDialog (){
       this.showDialog = false;
