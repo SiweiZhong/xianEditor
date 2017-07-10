@@ -91,7 +91,7 @@ class Enter extends Text {
   constructor (){
     super();
     this.name = 'br';
-    this.value = '';
+    this.value = '<br>';
     this.real = '\n';
   }
 }
@@ -112,10 +112,11 @@ class Group extends Identifier {
 }
 
 class MathTag extends Group {
-  constructor (style={}){
+  constructor (attrs={}){
     super();
-    this.name = 'span';
-    this.style = Object.assign({}, nodeStyle.mathTag, style);
+    this.name = 'div';
+    this.attrs = attrs;
+    this.style = Object.assign({}, nodeStyle.mathTag);
 
     this.init()
   }

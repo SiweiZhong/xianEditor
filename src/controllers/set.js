@@ -37,18 +37,18 @@ export function addPlaceholder (node){
 }
 
 export function addMath (){
-  const width = getFontWidth('M') * 1.4;
-  const start = new MathTag({width:width+'px'});
-
+  const start = new MathTag({class:"math_tag"});
+  
+  store.dispatch(addKey(new Text('$')));
   store.dispatch(addKey(start));
-  store.dispatch(addKey(new Text('$')));
-  store.dispatch(addKey(new Text('$')));
-  store.dispatch(addKey(start.createEndIdentifier()));
-
+  
   store.dispatch(setLocation(tree.editorState.location+2));
+  store.dispatch(addKey(start.createEndIdentifier()));
+  store.dispatch(addKey(new Text('$')));
+  
   store.dispatch(setOrigin(tree.editorState.location));
 
-  updateWordsProps(tree.editorState.location);
+  updateWordsProps(tree.editorState.location-2);
 }
 
 export function addEnter (){

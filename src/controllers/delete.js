@@ -3,7 +3,7 @@ import {setLocation, setOrigin, backspace} from '../actions'
 import {nodeTypes, getFontWidth} from '../util/'
 import {updateWordsProps} from './public'
 
-const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
+const {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
 let tree = {};
 
@@ -27,7 +27,7 @@ export function delBackspace(){
         break;
       }
       word = tree.words[tree.editorState.location];
-      if(word instanceof Style && word.header){ //遇到空的样式节点就删除
+      if( (word instanceof Style || word instanceof Group) && word.header){ //遇到空的样式节点就删除
         if(word.header === last){
           store.dispatch(backspace());
           store.dispatch(setLocation(tree.editorState.location-1));

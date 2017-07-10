@@ -233,11 +233,16 @@ export default {
       const text = this.words
         .map(w => {
           if(w instanceof Placeholder){
-            return w.real
+            return w.value
           }else{
             if(w.end){
               // return `<span style="font-weight:bold">`
-              return `<${w.name} style="${stringify(w.style)}">`
+              if(w instanceof Style){
+                return `<${w.name} class="${w.attrs.class}" style="${stringify(w.style)}">`
+              }else if (w instanceof Group){
+                return `<${w.name} class="${w.attrs.class}">`
+              }
+              
             }else if(w.header){
               return `</${w.name}>`
             }
