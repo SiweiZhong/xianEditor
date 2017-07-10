@@ -1,11 +1,12 @@
 import {getFontWidth} from './index'
+import * as nodeStyle from '../nodeStyle'
 
 class Identifier {
   constructor (){
     
   }
-  createEndIdentifier (){
-    const ident = new this.constructor();
+  createEndIdentifier (...arg){
+    const ident = new this.constructor(...arg);
     ident.header = this;
     this.end = ident;
     return ident;
@@ -39,23 +40,19 @@ class Placeholder extends Identifier {
   }
   init (){
     const {width, height} = this.style;
-    this.width = width || 0;
-    this.height = height || 0;
+    this.width = 0;
+    this.height = 0;
+    if(width){
+      this.width = +width.match(/\d+/)[0] || 0;
+    }
+    if(height){
+      this.height = +height.match(/\d+/)[0] || 0;
+    }
+    this._w = this.width;
+    this._h = this.height;
   }
   replace (width){
     this.width = width;
-  }
-}
-
-class MathTag extends Placeholder {
-  constructor (attrs={}, style={}){
-    super();
-    this.name = name;
-    this.attrs = attrs;
-    this.style = style;
-    this.value = 'M';
-    
-    this.init()
   }
 }
 
@@ -99,4 +96,33 @@ class Enter extends Text {
   }
 }
 
-export {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter}
+class Group extends Identifier {
+  constructor (style={}){
+    super();
+    this.name = 'div';
+    this.style = style;
+    this.init()
+  }
+  init (){
+    this.width = this.style.width || 0;
+  }
+  replace (width){
+    this.width = width;
+  }
+}
+
+class MathTag extends Group {
+  constructor (style={}){
+    super();
+    this.name = 'span';
+    this.style = Object.assign({}, nodeStyle.mathTag, style);
+
+    this.init()
+  }
+  // init (){
+
+  // }
+}
+
+
+export {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter}

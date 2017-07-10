@@ -20,6 +20,10 @@ export function moveUp(){
   let n = 0;
   let i = loc > 0 ? loc-1 : 0;
   for(;i>=0;i--){
+    if(tree.words[i] instanceof Style){
+      loc--;
+      continue;
+    }
     if(tree.words[i].rowNum < y-1){
       break;
     }
@@ -33,7 +37,6 @@ export function moveUp(){
   loc += n > x ? x : n-1;
   loc = loc < 0 ? 0 : loc;
 
-  
   store.dispatch(setLocation(loc));
   if(!tree.editorState.shiftKey){
     store.dispatch(setOrigin(tree.editorState.location));
@@ -50,6 +53,10 @@ export function moveDown(){
   const length = tree.words.length;
   let i = loc == length-1 ? length : loc;
   for(;i<length;i++){
+    if(tree.words[i] instanceof Style){
+      loc++;
+      continue;
+    }
     if(tree.words[i].rowNum > y+1){
       break;
     }

@@ -14,20 +14,25 @@ export function updateWordsProps (location){
   if(tree.words.length == 0){
     return;
   }
-
+  
   while(location <= tree.words.length){
     let loc = location
     let word = tree.words[--loc];
-    let rowNum;
-    let text = '';
-
+    
     if(!word){
       location++;
       continue;
     }
 
+    let rowNum;
+    let text = word.real || '';
+    let width = word._w || 0;
+
     while(loc > 0){
       let last = tree.words[--loc];
+      if(last instanceof Style){
+        continue;
+      }
       if(rowNum == undefined){
         rowNum = last.rowNum;
       }
@@ -38,14 +43,14 @@ export function updateWordsProps (location){
         rowNum++;
         break
       }
-      text += last.real;
+      text += last.real || '';
+      width += last._w || 0;
 
       if(loc < 0) break;
     }
     word.rowNum = rowNum || 0;
     
-    let width = getFontWidth(text + word.real);
-    console.log(tree.editorState.autoLinefeed)
+    width += getFontWidth(text);
     if(tree.words[location-2] instanceof Enter){ 
       width = getFontWidth(word.real);
     }else if(tree.editorState.autoLinefeed && width > tree.editorState.width){

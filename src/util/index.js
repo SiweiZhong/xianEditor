@@ -51,4 +51,12 @@ function setData(self, state){
   self.words = state.words;
 }
 
-export {nodeTypes, whereAmI, setData, getFontWidth, updateWordsProps}
+function stringify(styleObject){
+  let str = '';
+  Object.keys(styleObject).forEach(key => {
+    str += `${key}:${styleObject[key]};`;
+  });
+  return str;
+}
+
+export {nodeTypes, whereAmI, setData, getFontWidth, updateWordsProps, stringify}

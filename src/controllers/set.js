@@ -21,7 +21,6 @@ export function addWord (key){
   }else{
     word = new Text(key)
   }
-  // setWordProps(word);
   store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));
   store.dispatch(setOrigin(tree.editorState.location));
@@ -33,11 +32,27 @@ export function addPlaceholder (node){
   store.dispatch(addKey(node));
   store.dispatch(setLocation(tree.editorState.location+1));
   store.dispatch(setOrigin(tree.editorState.location));
+
+  updateWordsProps(tree.editorState.location);
+}
+
+export function addMath (){
+  const width = getFontWidth('M') * 1.4;
+  const start = new MathTag({width:width+'px'});
+
+  store.dispatch(addKey(start));
+  store.dispatch(addKey(new Text('$')));
+  store.dispatch(addKey(new Text('$')));
+  store.dispatch(addKey(start.createEndIdentifier()));
+
+  store.dispatch(setLocation(tree.editorState.location+2));
+  store.dispatch(setOrigin(tree.editorState.location));
+
+  updateWordsProps(tree.editorState.location);
 }
 
 export function addEnter (){
-  const word = new Enter()
-  // setWordProps(word);
+  const word = new Enter();
 
   store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));

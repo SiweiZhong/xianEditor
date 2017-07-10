@@ -22,23 +22,21 @@ export function delBackspace(){
       store.dispatch(setLocation(location-1));
       store.dispatch(backspace());
     
-      word = tree.words[tree.editorState.location-1];
-      if(!word){
-        break;
-      }
-      if(word instanceof Placeholder){
+      const last = tree.words[tree.editorState.location-1];
+      if(!last){
         break;
       }
       word = tree.words[tree.editorState.location];
       if(word instanceof Style && word.header){ //遇到空的样式节点就删除
-        const last = tree.words[tree.editorState.location-1];
         if(word.header === last){
-          store.dispatch(setLocation(tree.editorState.location-1));
           store.dispatch(backspace());
           store.dispatch(setLocation(tree.editorState.location-1));
           store.dispatch(backspace());
         }
-      }else if(word instanceof Style){
+        if(tree.words[tree.editorState.location-1] instanceof Placeholder){
+          break;
+        }
+      }else{
         break;
       }
     }else{
@@ -46,5 +44,6 @@ export function delBackspace(){
     }
   }
   store.dispatch(setOrigin(tree.editorState.location));
+
   updateWordsProps(tree.editorState.location)
 }

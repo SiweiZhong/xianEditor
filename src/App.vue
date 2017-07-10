@@ -3,16 +3,16 @@ import store from './reducers'
 
 import Preview from './Preview.vue'
 
-import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
+import {nodeTypes, getFontWidth, whereAmI, setData, stringify} from './util'
 import {addKey, addB, backspace, setLocation, setOrigin, scaKey, setWidth, setHeight, setAutoLinefeed} from './actions'
 
 import {
-  addWord, addEnter, 
+  addWord, addEnter, addPlaceholder, addMath,
   moveUp, moveDown, moveLeft, moveRight,
   delBackspace,
 } from './controllers'
 
-const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
+const {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
 function renderContent (h, i){
   let _children = [];
@@ -20,6 +20,15 @@ function renderContent (h, i){
     let w = this._words[i];
     const len = _children.length;
     if(w instanceof Style){
+      if(w.end){
+        const {children, index} = renderContent.call(this, h, i+1);
+        const attrs = {style: w.style};
+        _children[len] = h(w.name , attrs, children);
+        i = index;
+      }else{
+        return {children:_children, index: i};
+      }
+    }else if(w instanceof Group){
       if(w.end){
         const {children, index} = renderContent.call(this, h, i+1);
         const attrs = {style: w.style};
@@ -77,11 +86,12 @@ export default {
     },
     _words (){
       const {origin, location} = this.state
-      let words = this.words.slice();
 
       if(origin == location){
-        return words;
+        return this.words;
       }
+      let words = this.words.slice();
+      
       let a = origin, b = location;
       if(a > b){
         let c = b;
@@ -154,11 +164,7 @@ export default {
         store.dispatch(setLocation(this.state.location+1));
         store.dispatch(setOrigin(this.state.origin + 1));
       }else if(name == 'math'){
-        let width = getFontWidth('M') * 1.4;
-        const start = new Math({width}, {width:width+'px'}, 'M');
-        addPlaceholder(start);
-        addPlaceholder(start.end());
-        moveLeft();
+        addMath()
       }
     },
     keydown (event){
@@ -226,11 +232,19 @@ export default {
     submit (event){
       const text = this.words
         .map(w => {
-          if(w.constructor.name == 'Text'){
-            return w.value
+          if(w instanceof Placeholder){
+            return w.real
+          }else{
+            if(w.end){
+              // return `<span style="font-weight:bold">`
+              return `<${w.name} style="${stringify(w.style)}">`
+            }else if(w.header){
+              return `</${w.name}>`
+            }
           }
         })
         .join('');
+
       this.$emit('submit-content', text);
     }
   },
@@ -260,7 +274,7 @@ export default {
   
   render (h){
     const data = renderContent.call(this, h, 0);
-    // console.log(this._words.map(w => w.value+'=>'+w.rowNum+'-'+w.width))
+    console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
     // console.log(this._words)
     return (
       <div class="xianEditor" onClick={this.editorFocus}>
