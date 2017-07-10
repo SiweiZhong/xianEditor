@@ -3,47 +3,61 @@ import store from './reducers'
 
 import Preview from './Preview.vue'
 
-import {nodeTypes, getFontWidth, whereAmI, setData} from './util'
-import {addKey, addB, backspace, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey} from './actions'
+import {nodeTypes, getFontWidth, whereAmI, setData, stringify} from './util'
+import {addKey, addB, backspace, setLocation, setOrigin, scaKey, setWidth, setHeight, setAutoLinefeed} from './actions'
 
 import {
-  addSpace, addEnter, 
+  addWord, addEnter, addPlaceholder, addMath,
   moveUp, moveDown, moveLeft, moveRight,
   delBackspace,
 } from './controllers'
 
-const {text, placeholder, enter, style, closed} = nodeTypes;
+const {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
 
 function renderContent (h, i){
   let _children = [];
   for(;i<this._words.length;i++){
     let w = this._words[i];
-    if(w.type == 'style'){
-      const {children, index} = renderContent.call(this, h, i+1);
-      const attrs = Object.assign({}, w.attrs);
-      console.log(w.name , attrs, children)
-      _children[_children.length] = h(w.name , attrs, children);
-      i = index;
-    }else if(w.type == 'closed'){
-      return {children:_children, index: i};
-    }else if(w.type == 'placeholder' || w.type == 'enter'){
-      const attrs = Object.assign({}, w.attrs);
-      _children[_children.length] = h(w.name, attrs, w.value);
-    }else{
-      // console.log(w.value)
-      _children[_children.length] = w.value;
+    const len = _children.length;
+    if(w instanceof Style){
+      if(w.end){
+        const {children, index} = renderContent.call(this, h, i+1);
+        const attrs = {style: w.style};
+        _children[len] = h(w.name , attrs, children);
+        i = index;
+      }else{
+        return {children:_children, index: i};
+      }
+    }else if(w instanceof Group){
+      if(w.end){
+        const {children, index} = renderContent.call(this, h, i+1);
+        const attrs = {style: w.style};
+        _children[len] = h(w.name , attrs, children);
+        i = index;
+      }else{
+        return {children:_children, index: i};
+      }
+    }else if(w instanceof Placeholder){
+      if(w instanceof Text){
+        if(w.constructor.name == 'Text'){
+          _children[len] = w.value
+        }else{
+          _children[len] = h(w.name, {domProps:{innerHTML:w.value}});
+        }
+      }else{
+        const attrs = {attrs: w.attrs, style: w.style};
+        _children[len] = h(w.name, attrs, w.value);
+      }
     }
   }
-  // console.log(_children)
   return _children;
 }
 
 export default {
-  name: 'app',
+  name: 'editor',
   props: ['width', 'height'],
   data () {
     return {
-      data: [],
       state: {},
       words: [],
       hheadAscent: 0, //文字渲染后行高与文字高度比
@@ -59,63 +73,25 @@ export default {
     lineHeight (){
       return this.fontSize * this.hheadAscent;
     },
-    
     offsetY (){
       const a = Math.floor(this.height / this.lineHeight);
-      const b = this.y;
+      const b = this.y();
       const m = b - this.head;
-
       if(m >= a){
         this.head += m - a + 1;
-        return -this.head * this.lineHeight; 
       }else if(m < 0){
         this.head += m;
-        return -this.head * this.lineHeight;
       }
       return -this.head * this.lineHeight;
     },
     _words (){
       const {origin, location} = this.state
-      let words = this.words.slice();
 
-      let text = ''
-      let offsetWidth = 0;
-      let width = 0;
-      let rowNum = 0;
-      for(let i=0;i<words.length;i++){
-        let w = words[i];
-        if(w.type == 'text'){
-          if(this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width){
-            text = '';
-            offsetWidth = 0;
-            rowNum++
-          }
-          text += w.value;
-          let width = getFontWidth(text);
-          
-          w.width  = offsetWidth + width;
-          w.rowNum = rowNum;
-        }else if(w.type == 'enter'){
-          text = '';
-          w.width  = width;
-          w.rowNum = rowNum++;
-        }else if(w.type == 'placeholder'){
-          if(this.autoLinefeed && offsetWidth + getFontWidth(text + w.value) > this.width){
-            text = '';
-            offsetWidth = 0;
-            rowNum++
-          }
-          let width = getFontWidth(text);
-          offsetWidth += w.attrs.attrs.width
-          w.width  = offsetWidth + width;
-          
-          w.rowNum = rowNum;
-        }
-      }
-      // console.log(words.map(o=>o.value))
       if(origin == location){
-        return words;
+        return this.words;
       }
+      let words = this.words.slice();
+      
       let a = origin, b = location;
       if(a > b){
         let c = b;
@@ -123,15 +99,13 @@ export default {
         a = c;
       }
       let arr = this.words.slice(a, b);
-      arr.unshift(style('span', 
-        {
-          style: {
-            'line-height': this.lineHeight + 'px',
-            background: '#3390ff',
-          }
-        }
-      ))
-      arr.push(closed())
+      const start = new Style({
+        'line-height': this.lineHeight + 'px',
+        background: '#3390ff',
+      });
+
+      arr.unshift(start);
+      arr.push(start.createEndIdentifier());
       words.splice(a, b-a, ...arr);
       
       return words;
@@ -142,7 +116,6 @@ export default {
       let {location} = this.state;
       const y = this.y();
       let width = 0;
-
       while(1){
         if(location == 0){
           break;
@@ -160,23 +133,22 @@ export default {
       const {words} = this;
       let {location} = this.state;
       let i = 0;
-      while(1){
-        if(location == 0 && !words[location]) {
+      while(location >= 0){
+        if(location == 0 && !words[location]) { //没有任何输入时
           return 0;
         };
-        let word = words[location--];
-        if(word){
-          if(word.rowNum >= 0){
-            if(word.type=='enter' && i > 0){ //光标左边是换行时y+1
-              i += word.rowNum;
-            }else{
-              i = word.rowNum;
+        
+        let word = words[--location];
+        if(word instanceof Placeholder){
+          i = word.rowNum;
+          if(word instanceof Enter){ //光标左边是换行时y+1
+            i++
+          }else if(words[location+1]){
+            if(words[location+1].rowNum > word.rowNum){
+              i++
             }
-            break;
           }
-          continue;
-        }else{ // location是最后一位
-          i = 1;
+          break;
         }
       }
       return i;
@@ -191,16 +163,8 @@ export default {
         
         store.dispatch(setLocation(this.state.location+1));
         store.dispatch(setOrigin(this.state.origin + 1));
-      }else if(name == 'autoLinefeed'){
-        this.autoLinefeed = arg[0];
       }else if(name == 'math'){
-        let width = getFontWidth('M') * 1.4;
-        let node1 = placeholder('M', 'math_tag', {width:width+'px'}, {width});
-        let node2 = placeholder('M', 'math_tag', {width:width+'px'}, {width});
-        store.dispatch(addKey(node1));
-        store.dispatch(setLocation(this.state.location+1));
-        store.dispatch(setOrigin(this.state.location));
-        store.dispatch(addKey(node2));
+        addMath()
       }
     },
     keydown (event){
@@ -209,48 +173,7 @@ export default {
       let {location, rowsIndex} = state
       if(key != 'Process'){
         this.isProcess = false;
-        store.dispatch(scaKey(shiftKey, ctrlKey, altKey));        
-        
-        if(code.slice(0, 3) == 'Key' || code.slice(0, 3) == 'Dig'){ // 主键盘字母&数字
-          store.dispatch(addKey(text(key)));
-          store.dispatch(setLocation(location+1));
-        }
-
-        switch(code){
-          case 'Backquote':     // `
-          case 'Minus':         // -
-          case 'Equal':         // +
-          
-          case 'BracketLeft':   // [
-          case 'BracketRight':  // ]
-          
-          case 'Backslash':     // \
-          case 'Semicolon':     // ;
-          case 'Quote':         // '
-
-          case 'Comma':         // ,
-          case 'Period':        // .
-          case 'Slash':         // /
-
-          case 'Numpad0':
-          case 'Numpad1':
-          case 'Numpad2':
-          case 'Numpad3':
-          case 'Numpad4':
-          case 'Numpad5':
-          case 'Numpad6':
-          case 'Numpad7':
-          case 'Numpad8':
-          case 'Numpad9':
-          
-          case 'NumpadDecimal':   // .
-          case 'NumpadAdd':       // +
-          case 'NumpadSubtract':  // -
-          case 'NumpadMultiply':  // *
-          case 'NumpadDivide':    // /
-            store.dispatch(addKey(text(key)));
-            store.dispatch(setLocation(location+1));
-        }
+        store.dispatch(scaKey(shiftKey, ctrlKey, altKey));
 
         switch(code){
           case 'ArrowUp': 
@@ -265,26 +188,27 @@ export default {
           case 'ArrowRight':
             moveRight();
             break;
-          case 'Space':
-            addSpace();
-            break;
           case 'Backspace':
             delBackspace();
             break;
           case 'NumpadEnter': //Enter
           case 'Enter': //Enter
-            addEnter();
-            break
-        }
-
-        if(!shiftKey){
-          store.dispatch(setOrigin(this.state.location));
+            addEnter(key)
+            break;
+          case 'ShiftLeft':
+          case 'ControlLeft':
+          case 'AltLeft':
+          case 'ShiftRight':
+          case 'ControlRight':
+          case 'AltRight':
+            break;
+          default:
+            addWord(key)
         }
         event.preventDefault();
       }else{
         this.isProcess = true;
       }
-      
       // event.preventDefault();
     },
     oninput (event){
@@ -295,8 +219,7 @@ export default {
         window.el = event.target
         
         text.forEach(s=>{
-          store.dispatch(addKey(text(s)));
-          store.dispatch(setLocation(this.state.location+1));
+          addWord(s);
         })
         this.isProcess = false;
         // event.target.innerHTML = '';
@@ -309,11 +232,24 @@ export default {
     submit (event){
       const text = this.words
         .map(w => {
-          if(w.type == "text"){
+          if(w instanceof Placeholder){
             return w.value
+          }else{
+            if(w.end){
+              // return `<span style="font-weight:bold">`
+              if(w instanceof Style){
+                return `<${w.name} class="${w.attrs.class}" style="${stringify(w.style)}">`
+              }else if (w instanceof Group){
+                return `<${w.name} class="${w.attrs.class}">`
+              }
+              
+            }else if(w.header){
+              return `</${w.name}>`
+            }
           }
         })
         .join('');
+
       this.$emit('submit-content', text);
     }
   },
@@ -322,7 +258,9 @@ export default {
     const unsubscribe = store.subscribe(()=>{
       setData(this, store.getState())
     })
-    store.dispatch(setLocation(0))
+    store.dispatch(setLocation(0));
+    store.dispatch(setWidth(this.width));
+    store.dispatch(setHeight(this.height));
   },
 
   mounted (){
@@ -335,13 +273,14 @@ export default {
     sp.innerHTML = 'a';
     document.body.appendChild(sp);
     
-    this.hheadAscent = sp.offsetHeight / 1000;
+    this.hheadAscent = sp.offsetHeight / 1000; // 获取真实行高比
     
   },
   
   render (h){
     const data = renderContent.call(this, h, 0);
-    // console.log(data)
+    console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
+    // console.log(this._words)
     return (
       <div class="xianEditor" onClick={this.editorFocus}>
         <Preview onClickingTools={this.clickingTools}></Preview>

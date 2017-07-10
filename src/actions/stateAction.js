@@ -17,16 +17,16 @@ function setLocation (location){
 function setOrigin (location){
   return {type: constants.SET_ORIGIN, value: location}
 }
-function setRowsIndex (location){
-  return {type: constants.SET_ROWS_INDEX, value: location}
-}
-function removeRowsIndex (values){
-  if(!(values instanceof Array)){
-    values = [values]
-  }
-  return {type: constants.REMOVE_ROWS_INDEX, value: values}
-}
 function scaKey (shiftKey, ctrlKey, altKey){
   return {type: constants.S_C_A_KEY, value: {shiftKey, ctrlKey, altKey}}
 }
-export {moveLeft, moveRight, moveUp, moveDown, setLocation, setOrigin, setRowsIndex, removeRowsIndex, scaKey}
+function setWidth (width){
+  return {type: constants.SET_WIDTH, value: width}
+}
+function setHeight (height){
+  return {type: constants.SET_HEIGHT, value: height}
+}
+function setAutoLinefeed (v){
+  return {type: constants.AUTO_LINEFEED, value: v}
+}
+export {moveLeft, moveRight, moveUp, moveDown, setLocation, setOrigin, removeRowsIndex, scaKey, setWidth, setHeight, setAutoLinefeed}

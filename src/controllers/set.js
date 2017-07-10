@@ -1,7 +1,10 @@
 import store from '../reducers'
 
-import {addKey, setRowsIndex, setLocation} from '../actions'
-import {text, placeholder, enter, style, closed} from '../util/nodeTypes'
+import {getFontWidth} from '../util'
+import {updateWordsProps} from './public'
+
+import {addKey, setLocation, setOrigin} from '../actions'
+import {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} from '../util/nodeTypes'
 
 let tree = {};
 
@@ -9,12 +12,50 @@ const unsubscribe = store.subscribe(()=>{
   tree = store.getState();
 })
 
-export function addSpace(){
-  store.dispatch(addKey(placeholder('space')));
+export function addWord (key){
+  let word;
+  if(key == ' '){
+    word = new Space()
+  }else if(key == 'Tab'){
+    word = new Tab()
+  }else{
+    word = new Text(key)
+  }
+  store.dispatch(addKey(word));
   store.dispatch(setLocation(tree.editorState.location+1));
+  store.dispatch(setOrigin(tree.editorState.location));
+  
+  updateWordsProps(tree.editorState.location);
 }
-export function addEnter(){
-  store.dispatch(setRowsIndex(tree.editorState.location));
-  store.dispatch(addKey(enter('br')));
+
+export function addPlaceholder (node){
+  store.dispatch(addKey(node));
   store.dispatch(setLocation(tree.editorState.location+1));
+  store.dispatch(setOrigin(tree.editorState.location));
+
+  updateWordsProps(tree.editorState.location);
+}
+
+export function addMath (){
+  const start = new MathTag({class:"math_tag"});
+  
+  store.dispatch(addKey(new Text('$')));
+  store.dispatch(addKey(start));
+  
+  store.dispatch(setLocation(tree.editorState.location+2));
+  store.dispatch(addKey(start.createEndIdentifier()));
+  store.dispatch(addKey(new Text('$')));
+  
+  store.dispatch(setOrigin(tree.editorState.location));
+
+  updateWordsProps(tree.editorState.location-2);
+}
+
+export function addEnter (){
+  const word = new Enter();
+
+  store.dispatch(addKey(word));
+  store.dispatch(setLocation(tree.editorState.location+1));
+  store.dispatch(setOrigin(tree.editorState.location));
+  updateWordsProps(tree.editorState.location);
 }

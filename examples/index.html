@@ -3,8 +3,12 @@
 <head>
   <meta charset="utf-8">
   <title>my-project</title>
-  <link href="../dest/bundle.css" rel="stylesheet" type="text/css">
+  <link href="../dist/bundle.css" rel="stylesheet" type="text/css">
   <link href="style.css" rel="stylesheet" type="text/css">
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$']]}});
+  </script>
+  <script src="MathJax.js?config=TeX-AMS_CHTML-full"></script>
 </head>
 <body>
 <div id="app">
@@ -19,13 +23,13 @@
     <div class="box right">
       <p><i>请使用Chrome浏览器</i></p>
       <p>
-        当前版本暂不支持输入法，后续版本会加入输入法、数学公式、代码语法高亮
+        当前版本暂不支持输入法、鼠标操作
       </p>
-      <h2>当前支持</h2>
+      <h2>使用说明</h2>
       <ul>
         <li>选区：shift + 方向键</li>
-        <li>字体加粗: 选择文本后点击按钮B</li>
-        <li>自动换行</li>
+        <li>字体加粗: 点击B按钮，选区内的文本会被加粗</li>
+        <li>数学公式: 点击Math按钮，在$$之间输入LaTex语法，如a \ne 0，点击预览后看到效果</li>
       </ul>
       <a href="https://github.com/pastry-2841/xianEditor">GIT地址</a>
     </div>
@@ -34,14 +38,14 @@
     
     <div class="dialog_box">
       <div class="dialog_head"><span class="head_button" @click="hidingDialog">X</span></div>
-      <div class="dialog_content">{{text}}</div>
+      <div class="dialog_content" v-html="text"></div>
     </div>
   </div>
 </div>
 
 
-<script src="vue.min.js"></script>
-<script src="../dest/bundle.js"></script>
+<script src="vue.js"></script>
+<script src="../dist/bundle.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
