@@ -60,8 +60,10 @@ export default {
       hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
       head: 0,
+      autoLinefeed: true,
       isFocused: false,
       isProcess: false,
+      start: 0,
     }
   },
   computed: {
@@ -152,6 +154,7 @@ export default {
       let {key, code, shiftKey, ctrlKey, altKey, target} = event;
       let {state, words} = this
       let {location, rowsIndex} = state
+
       if(key != 'Process'){
         this.isProcess = false;
         store.dispatch(scaKey(shiftKey, ctrlKey, altKey));
@@ -195,6 +198,9 @@ export default {
     oninput (event){
       const {selectionStart, selectionEnd} = event.target
       
+      console.log(event.selectionStart )
+
+
       if(this.isProcess && selectionStart == selectionEnd){
         let text = [...event.target.innerHTML];
         window.el = event.target
@@ -205,6 +211,24 @@ export default {
         this.isProcess = false;
         // event.target.innerHTML = '';
       }
+    },
+    compositionstart (event){
+      this.start = this.state.location;
+      // console.log(event)
+    },
+    compositionend (event){
+      // console.log(event)
+      this.start = this.state.location;
+      event.target.innerHTML = '';
+    },
+    inputting (event){
+      const {location} = this.state;
+      let text = event.target.innerHTML || '';
+      for(let v of Array(location-this.start).keys()){
+        delBackspace()
+      };
+      [...text].forEach(s => addWord(s=="'"?"`":s)); //单引号替换成 ` 
+      
     },
     editorFocus (event){
       this.$refs.back.focus();
@@ -233,20 +257,27 @@ export default {
   },
   render (){
     const data = renderContent.call(this, h, 0);
-    // console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
+    console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
     // console.log(this._words)
     return (
       <div class="wrap" onClick={this.editorFocus} style={{'width': this.width+'px', 'height': this.height+'px'}} >
-        <textarea
+        <div
           ref="back"
-          class="back" contenteditable="true"
+          contenteditable="true"
+          class="back"
+          style={{
+            left: this.x() + 'px',
+            top: this.y() * this.lineHeight + 'px',
+          }}
           onKeydown={this.keydown}
-          onInput={this.oninput}
+          onCompositionstart = {this.compositionstart}
+          onCompositionend = {this.compositionend}  
+          onInput = {this.inputting}
+
           onFocus = {()=>this.isFocused = true}
           onBlur = {()=>this.isFocused = false}
         >
-        </textarea>
-
+        </div>
         <div 
           class={["editor", this.isFocused?'isFocused':'']}
           style={{
@@ -274,9 +305,12 @@ export default {
   border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
+  background: #fff;
 }
 .editor{
-  position: relative;
+  position: absolute;
+  left: 0px;
+  width: 100%;
   min-height: 100%;
   background: #fff;
   pointer-events: none;
@@ -291,11 +325,12 @@ export default {
   animation-name: slidein;
 }
 .back{
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
   position: absolute;
   top: 0px;
   left: 0px;
+  overflow: hidden;
 }
 .placeholder{
   display: inline-block;

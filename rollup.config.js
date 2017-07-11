@@ -4,6 +4,7 @@ import babel from 'rollup-plugin-babel';
 import vue from 'rollup-plugin-vue';
 import commonjs from 'rollup-plugin-commonjs';
 import replace  from 'rollup-plugin-replace';
+import serve  from 'rollup-plugin-serve';
 
 export default {
   entry: 'src/main.js',
@@ -29,6 +30,7 @@ export default {
     }),
     commonjs({
       include: 'node_modules/**',
-    })
+    }),
+    serve()
   ],
 };
