@@ -1,8 +1,8 @@
 import store from '../reducers'
 import {setLocation, setOrigin} from '../actions'
-import {whereAmI, nodeTypes} from '../util/'
+import {whereAmI} from '../util/'
 
-const {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
+import {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} from '../nodeTypes'
 
 let tree = {};
 

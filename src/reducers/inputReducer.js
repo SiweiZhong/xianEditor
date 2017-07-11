@@ -1,5 +1,5 @@
 import * as constants from '../constants'
-import {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} from '../util/nodeTypes'
+import {Identifier, Style, Placeholder, MathTag, Text, Space, Tab, Enter} from '../nodeTypes'
 
 export function words(state=[], action, editorState){
   const {location, origin} = editorState;
@@ -25,10 +25,11 @@ export function words(state=[], action, editorState){
       a = c;
     }
     state = [...state];
-
+    
     const w = new Style({'font-weight': 'bold'});
     state.splice(a, 0, w);
     state.splice(b+1, 0, w.createEndIdentifier());
+
     return state;
   }
 

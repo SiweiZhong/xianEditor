@@ -1,9 +1,9 @@
 import store from '../reducers'
 import {setLocation, setOrigin, backspace} from '../actions'
-import {nodeTypes, getFontWidth} from '../util/'
+import {getFontWidth} from '../util/'
 import {updateWordsProps} from './public'
 
-const {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} = nodeTypes;
+import {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} from '../nodeTypes'
 
 let tree = {};
 

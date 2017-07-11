@@ -34,15 +34,13 @@
       <a href="https://github.com/pastry-2841/xianEditor">GIT地址</a>
     </div>
   </main>
-  <div class="dialog" :style="{display: showDialog ? 'block' : 'none'}">
-    
+  <div class="dialog" :style="{display: showDialog ? 'block' : 'none'}" ref="dialog">
     <div class="dialog_box">
       <div class="dialog_head"><span class="head_button" @click="hidingDialog">X</span></div>
       <div class="dialog_content" v-html="text"></div>
     </div>
   </div>
 </div>
-
 
 <script src="vue.js"></script>
 <script src="../dist/bundle.js"></script>

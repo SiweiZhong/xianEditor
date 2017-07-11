@@ -1,4 +1,4 @@
-import * as nodeTypes from './nodeTypes'
+import {Enter} from '../nodeTypes'
 
 function whereAmI(words, location){
   let x = 0;
@@ -9,7 +9,7 @@ function whereAmI(words, location){
   }else if(loc == words.length){ // 光标在结尾处时
     loc--;
     x++;
-    if(words[loc] instanceof nodeTypes.Enter){
+    if(words[loc] instanceof Enter){
       return {x:0, y:words[loc].rowNum+1};
     }
   }
@@ -59,4 +59,4 @@ function stringify(styleObject){
   return str;
 }
 
-export {nodeTypes, whereAmI, setData, getFontWidth, updateWordsProps, stringify}
+export {whereAmI, setData, getFontWidth, stringify}

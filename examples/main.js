@@ -15,12 +15,12 @@ new Vue({
     preview (text){
       this.showDialog = true;
       this.text = text;
-      
-      setTimeout(function(){
-        const els = document.querySelectorAll('.math_tag')
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub, Array.from(els)]);
+      setTimeout(() => {
+        const els = this.$refs.dialog.querySelectorAll('.math_tag')
+        Array.from(els).forEach(el => {
+          MathJax.Hub.Queue(["Typeset", MathJax.Hub, el]);
+        })
       })
-      // MathJax.Hub.Queue(["Typeset", MathJax.Hub, Array.from(els)]);
     },
     hidingDialog (){
       this.showDialog = false;
