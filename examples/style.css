@@ -13,6 +13,9 @@ body{
 #app{
     height: 100%;
 }
+i {
+    font-size: 28px;
+}
 p{
     margin: 1px;
 }
