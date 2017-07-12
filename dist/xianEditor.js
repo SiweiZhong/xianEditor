@@ -4,13 +4,16 @@
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
+/** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
 
 /** Used as a reference to the global object. */
 var root = freeGlobal || freeSelf || Function('return this')();
 
+/** Built-in value references. */
 var Symbol$1 = root.Symbol;
 
+/** Used for built-in method references. */
 var objectProto$1 = Object.prototype;
 
 /** Used to check objects for own properties. */
@@ -74,6 +77,7 @@ function objectToString(value) {
   return nativeObjectToString$1.call(value);
 }
 
+/** `Object#toString` result references. */
 var nullTag = '[object Null]';
 var undefinedTag = '[object Undefined]';
 
@@ -110,6 +114,7 @@ function overArg(func, transform) {
   };
 }
 
+/** Built-in value references. */
 var getPrototype = overArg(Object.getPrototypeOf, Object);
 
 /**
@@ -140,6 +145,7 @@ function isObjectLike(value) {
   return value != null && typeof value == 'object';
 }
 
+/** `Object#toString` result references. */
 var objectTag = '[object Object]';
 
 /** Used for built-in method references. */
@@ -264,6 +270,12 @@ exports['default'] = result;
 
 var index = index$1;
 
+/**
+ * These are private action types reserved by Redux.
+ * For any unknown actions, you must return the current state.
+ * If the current state is undefined, you must return the initial state.
+ * Do not reference these action types directly in your code.
+ */
 var ActionTypes = {
   INIT: '@@redux/INIT'
 
@@ -537,6 +549,10 @@ function warning(message) {
  * (...args) => f(g(h(...args))).
  */
 
+/*
+* This is a dummy function to check if the function name has been altered by minification.
+* If the function has been minified and NODE_ENV !== 'production', warn the user.
+*/
 function isCrushed() {}
 
 if ("development" !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
@@ -680,7 +696,7 @@ var Identifier = function () {
   return Identifier;
 }();
 
-var Style$1 = function (_Identifier) {
+var Style = function (_Identifier) {
   inherits(Style, _Identifier);
 
   function Style() {
@@ -709,7 +725,7 @@ var Style$1 = function (_Identifier) {
   return Style;
 }(Identifier);
 
-var Group$1 = function (_Identifier) {
+var Group = function (_Identifier) {
   inherits(Group, _Identifier);
 
   function Group() {
@@ -738,7 +754,7 @@ var Group$1 = function (_Identifier) {
   return Group;
 }(Identifier);
 
-var Placeholder$1 = function (_Identifier) {
+var Placeholder = function (_Identifier) {
   inherits(Placeholder, _Identifier);
 
   function Placeholder(name) {
@@ -811,7 +827,7 @@ var MathTag = function (_Group) {
   }
 
   return MathTag;
-}(Group$1);
+}(Group);
 
 var Text = function (_Placeholder) {
   inherits(Text, _Placeholder);
@@ -829,7 +845,7 @@ var Text = function (_Placeholder) {
   }
 
   return Text;
-}(Placeholder$1);
+}(Placeholder);
 
 var Space = function (_Text) {
   inherits(Space, _Text);
@@ -913,7 +929,7 @@ function words() {
         }
         state = [].concat(toConsumableArray(state));
 
-        var w = new Style$1({ 'font-weight': 'bold' });
+        var w = new Style({ 'font-weight': 'bold' });
         state.splice(a, 0, w);
         state.splice(b + 1, 0, w.createEndIdentifier());
 
@@ -1129,7 +1145,7 @@ function updateWordsProps(location) {
 
     while (loc > 0) {
       var last = tree$1.words[--loc];
-      if (last instanceof Style$1) {
+      if (last instanceof Style) {
         continue;
       }
       if (rowNum == undefined) {
@@ -1227,7 +1243,7 @@ function moveUp$1() {
   var n = 0;
   var i = loc > 0 ? loc - 1 : 0;
   for (; i >= 0; i--) {
-    if (tree$2.words[i] instanceof Style$1) {
+    if (tree$2.words[i] instanceof Style) {
       loc--;
       continue;
     }
@@ -1261,7 +1277,7 @@ function moveDown$1() {
   var length = tree$2.words.length;
   var i = loc == length - 1 ? length : loc;
   for (; i < length; i++) {
-    if (tree$2.words[i] instanceof Style$1) {
+    if (tree$2.words[i] instanceof Style) {
       loc++;
       continue;
     }
@@ -1288,7 +1304,7 @@ function moveLeft$1() {
     var x = tree$2.editorState.location - 1;
     var word = tree$2.words[x];
 
-    if (word instanceof Style$1) {
+    if (word instanceof Style) {
       store.dispatch(setLocation(x));
     } else {
       store.dispatch(setLocation(x));
@@ -1303,7 +1319,7 @@ function moveRight$1() {
   while (tree$2.editorState.location < tree$2.words.length) {
     var x = tree$2.editorState.location + 1;
     var word = tree$2.words[x];
-    if (word instanceof Style$1) {
+    if (word instanceof Style) {
       store.dispatch(setLocation(x));
     } else {
       store.dispatch(setLocation(x));
@@ -1328,7 +1344,7 @@ function delBackspace() {
     if (location <= 0) break;
     var word = tree$3.words[location - 1];
 
-    if (word instanceof Placeholder$1) {
+    if (word instanceof Placeholder) {
 
       store.dispatch(setLocation(location - 1));
       store.dispatch(backspace());
@@ -1338,14 +1354,14 @@ function delBackspace() {
         break;
       }
       word = tree$3.words[tree$3.editorState.location];
-      if ((word instanceof Style$1 || word instanceof Group$1) && word.header) {
+      if ((word instanceof Style || word instanceof Group) && word.header) {
         //遇到空的样式节点就删除
         if (word.header === last) {
           store.dispatch(backspace());
           store.dispatch(setLocation(tree$3.editorState.location - 1));
           store.dispatch(backspace());
         }
-        if (tree$3.words[tree$3.editorState.location - 1] instanceof Placeholder$1) {
+        if (tree$3.words[tree$3.editorState.location - 1] instanceof Placeholder) {
           break;
         }
       } else {
@@ -1365,7 +1381,7 @@ function renderContent(h, i) {
   for (; i < this._words.length; i++) {
     var w = this._words[i];
     var len = _children.length;
-    if (w instanceof Style$1) {
+    if (w instanceof Style) {
       if (w.end) {
         var _renderContent$call = renderContent.call(this, h, i + 1),
             children = _renderContent$call.children,
@@ -1377,7 +1393,7 @@ function renderContent(h, i) {
       } else {
         return { children: _children, index: i };
       }
-    } else if (w instanceof Group$1) {
+    } else if (w instanceof Group) {
       if (w.end) {
         var _renderContent$call2 = renderContent.call(this, h, i + 1),
             _children2 = _renderContent$call2.children,
@@ -1389,7 +1405,7 @@ function renderContent(h, i) {
       } else {
         return { children: _children, index: i };
       }
-    } else if (w instanceof Placeholder$1) {
+    } else if (w instanceof Placeholder) {
       if (w instanceof Text) {
         if (w.constructor.name == 'Text') {
           _children[len] = w.value;
@@ -1415,8 +1431,10 @@ var Editor = { _scopeId: 'data-v-1f894013',
       hheadAscent: 0, //文字渲染后行高与文字高度比
       fontSize: 16,
       head: 0,
+      autoLinefeed: true,
       isFocused: false,
-      isProcess: false
+      isProcess: false,
+      start: 0
     };
   },
 
@@ -1454,7 +1472,7 @@ var Editor = { _scopeId: 'data-v-1f894013',
         a = c;
       }
       var arr = this.words.slice(a, b);
-      var start = new Style$1({
+      var start = new Style({
         'line-height': this.lineHeight + 'px',
         background: '#3390ff'
       });
@@ -1498,7 +1516,7 @@ var Editor = { _scopeId: 'data-v-1f894013',
         }
 
         var word = words[--location];
-        if (word instanceof Placeholder$1) {
+        if (word instanceof Placeholder) {
           i = word.rowNum;
           if (word instanceof Enter) {
             //光标左边是换行时y+1
@@ -1524,6 +1542,7 @@ var Editor = { _scopeId: 'data-v-1f894013',
           words = this.words;
       var location = state.location,
           rowsIndex = state.rowsIndex;
+
 
       if (key != 'Process') {
         this.isProcess = false;
@@ -1572,6 +1591,8 @@ var Editor = { _scopeId: 'data-v-1f894013',
           selectionEnd = _event$target.selectionEnd;
 
 
+      console.log(event.selectionStart);
+
       if (this.isProcess && selectionStart == selectionEnd) {
         var text = [].concat(toConsumableArray(event.target.innerHTML));
         window.el = event.target;
@@ -1582,6 +1603,49 @@ var Editor = { _scopeId: 'data-v-1f894013',
         this.isProcess = false;
         // event.target.innerHTML = '';
       }
+    },
+    compositionstart: function compositionstart(event) {
+      this.start = this.state.location;
+      // console.log(event)
+    },
+    compositionend: function compositionend(event) {
+      // console.log(event)
+      this.start = this.state.location;
+      event.target.innerHTML = '';
+    },
+    inputting: function inputting(event) {
+      var location = this.state.location;
+
+      var text = event.target.innerHTML || '';
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = Array(location - this.start).keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var v = _step.value;
+
+          delBackspace();
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      
+      [].concat(toConsumableArray(text)).forEach(function (s) {
+        return addWord(s == "'" ? "`" : s);
+      }); //单引号替换成 ` 
     },
     editorFocus: function editorFocus(event) {
       this.$refs.back.focus();
@@ -1624,14 +1688,21 @@ var Editor = { _scopeId: 'data-v-1f894013',
         },
         style: { 'width': this.width + 'px', 'height': this.height + 'px' } },
       [h(
-        'textarea',
+        'div',
         {
           ref: 'back',
-          'class': 'back', attrs: { contenteditable: 'true'
+          attrs: { contenteditable: 'true'
+          },
+          'class': 'back',
+          style: {
+            left: this.x() + 'px',
+            top: this.y() * this.lineHeight + 'px'
           },
           on: {
             'keydown': this.keydown,
-            'input': this.oninput,
+            'compositionstart': this.compositionstart,
+            'compositionend': this.compositionend,
+            'input': this.inputting,
             'focus': function focus() {
               return _this2.isFocused = true;
             },
@@ -1751,4 +1822,4 @@ var App = {
 exports.App = App;
 
 }((this.xianEditor = this.xianEditor || {})));
-//# sourceMappingURL=bundle.js.map
+//# sourceMappingURL=xianEditor.js.map

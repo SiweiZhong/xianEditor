@@ -10,7 +10,7 @@ export default {
   entry: 'src/main.js',
   format: 'iife',
   moduleName: 'xianEditor',
-  dest: 'dist/bundle.js', // equivalent to --output
+  dest: 'dist/xianEditor.js', // equivalent to --output
   sourceMap: true,
   plugins: [
     replace({
