@@ -257,7 +257,7 @@ export default {
   },
   render (){
     const data = renderContent.call(this, h, 0);
-    console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
+    // console.log(this._words.map(w => w.value ? w.value+'=>'+w.rowNum+'-'+w.width : undefined))
     // console.log(this._words)
     return (
       <div class="wrap" onClick={this.editorFocus} style={{'width': this.width+'px', 'height': this.height+'px'}} >

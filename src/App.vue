@@ -5,6 +5,7 @@ import Preview from './Preview.vue'
 import Editor from './Editor.vue'
 
 import {setData} from './util'
+import {Identifier, Style, Group, Placeholder, MathTag, Text, Space, Tab, Enter} from './nodeTypes'
 import {addKey, addB, backspace, setLocation, setOrigin, scaKey, setWidth, setHeight, setAutoLinefeed} from './actions'
 
 import {
